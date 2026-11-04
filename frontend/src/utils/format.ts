@@ -1,12 +1,42 @@
 import dayjs from 'dayjs'
-import type { Role } from '@/types/api'
+import type { CoursePhase, EnrollmentStatus, Role } from '@/types/api'
 
 /** 后端返回北京时间的 ISO 本地时间，直接格式化，不做时区换算（技术设计 §5.4） */
 export function formatDateTime(value: string | null | undefined): string {
   return value ? dayjs(value).format('YYYY-MM-DD HH:mm') : '-'
 }
 
+/** 同一天：2026-11-05 09:00 ~ 12:00；跨天：两端都显示日期 */
+export function formatTimeRange(start: string, end: string): string {
+  const s = dayjs(start)
+  const e = dayjs(end)
+  return s.isSame(e, 'day')
+    ? `${s.format('YYYY-MM-DD HH:mm')} ~ ${e.format('HH:mm')}`
+    : `${s.format('YYYY-MM-DD HH:mm')} ~ ${e.format('YYYY-MM-DD HH:mm')}`
+}
+
+/** 提交给后端的时间格式（ISO 本地时间） */
+export const API_DATETIME_FORMAT = 'YYYY-MM-DD[T]HH:mm:ss'
+
 export const ROLE_LABEL: Record<Role, string> = {
   ADMIN: '管理员',
   EMPLOYEE: '员工',
+}
+
+export const PHASE_LABEL: Record<CoursePhase, string> = {
+  UPCOMING: '报名中',
+  ONGOING: '进行中',
+  ENDED: '已结束',
+}
+
+export const PHASE_TAG_TYPE: Record<CoursePhase, 'success' | 'warning' | 'info'> = {
+  UPCOMING: 'success',
+  ONGOING: 'warning',
+  ENDED: 'info',
+}
+
+export const ENROLLMENT_STATUS_LABEL: Record<EnrollmentStatus, string> = {
+  ENROLLED: '已报名',
+  CANCELLED: '已取消',
+  COMPLETED: '已完成',
 }

@@ -45,7 +45,7 @@ function onCommand(command: string) {
       <el-dropdown v-if="auth.user" trigger="click" @command="onCommand">
         <span class="user">
           {{ auth.user.realName }}
-          <el-tag v-if="auth.isAdmin" size="small" type="warning">管理员</el-tag>
+          <el-tag v-if="auth.isAdmin" size="small" type="warning" disable-transitions>管理员</el-tag>
           <el-icon><ArrowDown /></el-icon>
         </span>
         <template #dropdown>

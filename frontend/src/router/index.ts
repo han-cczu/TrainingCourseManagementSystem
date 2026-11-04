@@ -36,8 +36,26 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'courses',
         name: 'courses',
-        component: () => import('@/views/CourseListView.vue'),
+        component: () => import('@/views/course/CourseListView.vue'),
         meta: { title: '课程列表' },
+      },
+      {
+        path: 'courses/new',
+        name: 'course-new',
+        component: () => import('@/views/course/CourseFormView.vue'),
+        meta: { title: '新建课程', requiresAdmin: true },
+      },
+      {
+        path: 'courses/:id(\\d+)',
+        name: 'course-detail',
+        component: () => import('@/views/course/CourseDetailView.vue'),
+        meta: { title: '课程详情' },
+      },
+      {
+        path: 'courses/:id(\\d+)/edit',
+        name: 'course-edit',
+        component: () => import('@/views/course/CourseFormView.vue'),
+        meta: { title: '编辑课程', requiresAdmin: true },
       },
       {
         path: 'account/password',
