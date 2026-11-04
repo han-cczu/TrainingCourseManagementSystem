@@ -106,8 +106,8 @@ public class EnrollmentService {
             throw new BizException(ErrorCode.ENROLLMENT_NOT_FOUND);
         }
         Course course = lockCourse(unlocked.getCourseId());
-        // 加锁后重新读取：加锁前读到的状态可能已被并发的取消操作改变
-        Enrollment enrollment = enrollmentMapper.selectById(enrollmentId);
+        // 锁后必须当前读：普通 selectById 可能命中 MyBatis 缓存或 MySQL 的旧快照。
+        Enrollment enrollment = enrollmentMapper.selectByIdForUpdate(enrollmentId);
         LocalDateTime now = now();
         requireStarted(course, now);
         enrollment.complete(now, admin.id());

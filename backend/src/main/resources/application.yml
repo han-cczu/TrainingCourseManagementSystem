@@ -4,6 +4,10 @@ server:
 spring:
   application:
     name: tcms
+  jackson:
+    deserialization:
+      # 整数字段（例如课程容量）不能把 JSON 小数静默截断。
+      accept-float-as-int: false
   datasource:
     url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:tcms}?characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true
     username: ${DB_USERNAME:tcms}

@@ -22,6 +22,7 @@ public enum ErrorCode {
     ENROLLMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "报名记录不存在"),
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "用户不存在"),
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "不支持的请求方法"),
+    UNSUPPORTED_MEDIA_TYPE(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "不支持的请求内容类型，请使用 application/json"),
 
     USERNAME_TAKEN(HttpStatus.CONFLICT, "用户名已被占用"),
     ALREADY_ENROLLED(HttpStatus.CONFLICT, "你已报名该课程"),

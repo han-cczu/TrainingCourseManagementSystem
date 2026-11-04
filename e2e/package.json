@@ -10,7 +10,9 @@
     "pr3": "node pr3-course.mjs",
     "pr4": "node pr4-enrollment.mjs",
     "pr5": "node pr5-stats.mjs",
-    "all": "node pr3-course.mjs && node pr4-enrollment.mjs && node pr5-stats.mjs && node pr2-auth.mjs"
+    "regression": "node regression.mjs",
+    "runner-check": "node --test runner-check.mjs",
+    "all": "node regression.mjs && node --test runner-check.mjs && node pr3-course.mjs && node pr4-enrollment.mjs && node pr5-stats.mjs && node pr2-auth.mjs"
   },
   "devDependencies": {
     "playwright": "1.56.1"

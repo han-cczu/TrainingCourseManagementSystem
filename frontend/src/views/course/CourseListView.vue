@@ -20,8 +20,10 @@ const query = reactive({ keyword: '', phase: '' as CoursePhase | '', page: 1, si
 const records = ref<Course[]>([])
 const total = ref(0)
 const loading = ref(false)
+let loadVersion = 0
 
 async function load() {
+  const version = ++loadVersion
   loading.value = true
   try {
     const result = await coursesApi.list({
@@ -30,12 +32,13 @@ async function load() {
       page: query.page,
       size: query.size,
     })
+    if (version !== loadVersion) return
     records.value = result.records
     total.value = result.total
   } catch {
     // 拦截器已提示
   } finally {
-    loading.value = false
+    if (version === loadVersion) loading.value = false
   }
 }
 

@@ -23,7 +23,7 @@ public class AuthService {
     private final UserService userService;
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
-    /** 用户不存在时也做一次 BCrypt 比对，使响应耗时与"密码错误"一致，避免借耗时探测用户名 */
+    /** 用户不存在时也做一次密码哈希比对，避免直接返回造成明显的耗时差异。 */
     private final String dummyHash;
 
     public AuthService(UserService userService, JwtService jwtService, PasswordEncoder passwordEncoder) {

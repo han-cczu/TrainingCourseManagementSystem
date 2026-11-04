@@ -1,5 +1,7 @@
 package com.example.tcms.config;
 
+import java.util.Map;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -9,6 +11,8 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.crypto.password.DelegatingPasswordEncoder;
+import org.springframework.security.crypto.password.Pbkdf2PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
 import com.example.tcms.auth.JwtAuthConverter;
@@ -51,6 +55,16 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+        // 使用独立版本标识，后续更改参数时保留旧版本的校验能力。
+        String id = "pbkdf2-sha256-v1";
+        var pbkdf2 = new Pbkdf2PasswordEncoder("", 16, 600_000,
+                Pbkdf2PasswordEncoder.SecretKeyFactoryAlgorithm.PBKDF2WithHmacSHA256);
+        // 16 字节盐 + 32 字节哈希，Base64 加版本前缀共 82 字符，适配现有 VARCHAR(100)。
+        pbkdf2.setEncodeHashAsBase64(true);
+        var bcrypt = new BCryptPasswordEncoder();
+        var encoder = new DelegatingPasswordEncoder(id, Map.of(id, pbkdf2, "bcrypt", bcrypt));
+        // 原有管理员、员工及演示数据使用无前缀 BCrypt，继续支持登录和原密码验证。
+        encoder.setDefaultPasswordEncoderForMatches(bcrypt);
+        return encoder;
     }
 }
