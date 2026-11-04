@@ -277,15 +277,16 @@ try {
     Write-Warning "访问 $PublicUrl 失败：请确认火山引擎安全组已放行 TCP $NodePort。$($_.Exception.Message)"
 }
 if ($healthy) {
+    # 未登录访问需要认证的接口，后端应返回 401 统一错误体，说明 nginx -> backend 链路和认证都正常
     $status = 0
     try {
-        Invoke-WebRequest -Uri "$PublicUrl/api/__smoke_test__" -UseBasicParsing -TimeoutSec 15 | Out-Null
+        Invoke-WebRequest -Uri "$PublicUrl/api/auth/me" -UseBasicParsing -TimeoutSec 15 | Out-Null
         $status = 200
     } catch {
         if ($_.Exception.Response) { $status = [int]$_.Exception.Response.StatusCode }
     }
-    if ($status -eq 404) {
-        Write-Host '  前端 -> 后端    正常（返回预期的 404 RESOURCE_NOT_FOUND）'
+    if ($status -eq 401) {
+        Write-Host '  前端 -> 后端    正常（未登录返回预期的 401）'
     } else {
         $healthy = $false
         Write-Warning "后端链路异常（HTTP $status）。在服务器上查看：kubectl -n $Namespace logs deploy/backend --tail=100"

@@ -28,6 +28,13 @@ docker compose -f deploy/docker-compose.yml up -d --build   # 前端 http://loca
 - 业务错误抛 `BizException(ErrorCode.X)`；新增错误码同时更新 `ErrorCode` 和技术设计 §7.6。
 - 数据库变更只能新增 Flyway 脚本 `V{n}__xxx.sql`，**不得修改已提交的迁移**；迁移只增不改（便于回滚）。
 - 报名、取消、改容量必须先 `SELECT ... FOR UPDATE` 锁课程行（技术设计 §6）。
+- 当前用户：控制器参数 `@AuthenticationPrincipal CurrentUser`；管理员接口用 `@PreAuthorize("hasRole('ADMIN')")`。
+
+## 测试约定
+- 集成测试继承 `support/AbstractIntegrationTest`（Testcontainers MySQL + MockMvc，上下文共享，每个测试前清库、重置时钟），类名以 `IT` 结尾；纯单元测试以 `Test` 结尾。
+- 造数据用 `TestDataHelper`（`createEmployee/createAdmin/bearer/disable/count`）；控制时间用注入的 `MutableClock`（`setNow/advance`）。
+- 不要用 `@MockitoBean` 等改变上下文的注解，否则会创建新的 Spring 上下文和容器，测试变慢。
+- UI 自测脚本在 `e2e/`（Playwright），需先 `docker compose up`。
 
 ## 前端约定
 - 接口调用统一走 `src/api/http.ts`（自动带 token、统一错误提示）；类型定义放 `src/types/api.ts`，与后端 DTO 对应。
