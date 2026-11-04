@@ -44,6 +44,7 @@ export async function createRunner(title) {
         consoleErrors.push(`[${label}] ${m.text()}`)
       }
     })
+    page.on('pageerror', (error) => consoleErrors.push(`[${label}] ${error.message}`))
     pages.push([label, page])
     return page
   }
@@ -71,7 +72,7 @@ export async function createRunner(title) {
     for (const [status, name, detail] of results) console.log(`${status}  ${name}${detail ? '  -> ' + detail : ''}`)
     console.log(`\n浏览器控制台错误：${consoleErrors.length === 0 ? '无' : ''}`)
     for (const e of consoleErrors) console.log('  ' + e)
-    process.exit(results.some(([s]) => s === 'FAIL') ? 1 : 0)
+    process.exit(results.some(([s]) => s === 'FAIL') || consoleErrors.length > 0 ? 1 : 0)
   }
 
   return { newPage, step, finish }

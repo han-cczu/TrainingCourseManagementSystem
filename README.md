@@ -93,10 +93,12 @@ pnpm dev                      # http://localhost:5173，/api 自动代理到 :80
 
 ## 测试
 
+2026-11-04 补充复查并修复 6 类缺陷，完整后端 95 个测试、27 项 UI 自测和 3 项运行器检查全部通过；问题、修复方案与复验记录见 [本地测试复查](docs/本地测试复查-2026-11-04.md)。
+
 ```bash
-cd backend && ./mvnw test                  # 82 个测试，Testcontainers 自动启动 MySQL（需要 Docker）
+cd backend && ./mvnw test                  # 95 个测试，Testcontainers 自动启动 MySQL；需要 Docker
 cd frontend && pnpm build                  # vue-tsc 类型检查 + 生产构建
-cd e2e && npm install && npm run setup && npm run all   # 25 项 UI 自测（需先 docker compose up）
+cd e2e && npm install && npm run setup && npm run all   # 27 项 UI + 3 项运行器检查（需先 docker compose up）
 ```
 
 需求覆盖矩阵、测试用例和并发测试结果见 [自测说明](docs/自测说明.md)。每个 PR 都会由 GitHub Actions 自动运行后端测试和前端构建。

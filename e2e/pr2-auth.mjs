@@ -43,6 +43,7 @@ const newPage = async () => {
       consoleErrors.push(`[${m.location().url}] ${m.text()}`)
     }
   })
+  page.on('pageerror', (error) => consoleErrors.push(error.message))
   return page
 }
 const admin = await newPage()
@@ -198,4 +199,4 @@ console.log('\n==== PR2 UI 自测结果 ====')
 for (const [status, name, detail] of results) console.log(`${status}  ${name}${detail ? '  -> ' + detail : ''}`)
 console.log(`\n浏览器控制台错误：${consoleErrors.length === 0 ? '无' : ''}`)
 for (const e of consoleErrors) console.log('  ' + e)
-process.exit(results.some(([s]) => s === 'FAIL') ? 1 : 0)
+process.exit(results.some(([s]) => s === 'FAIL') || consoleErrors.length > 0 ? 1 : 0)

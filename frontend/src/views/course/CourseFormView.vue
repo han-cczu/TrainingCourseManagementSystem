@@ -28,7 +28,7 @@ const form = reactive({
   startTime: '',
   endTime: '',
   unlimited: false,
-  capacity: 30 as number | undefined,
+  capacity: 30 as number | null | undefined,
 })
 
 const futureStart: FormItemRule = {
@@ -65,6 +65,17 @@ const rules: FormRules = {
   description: [{ max: 2000, message: '最多 2000 个字符', trigger: 'blur' }],
   startTime: [{ required: true, message: '请选择开始时间', trigger: 'change' }, futureStart],
   endTime: [{ required: true, message: '请选择结束时间', trigger: 'change' }, endAfterStart],
+  capacity: [{
+    trigger: ['blur', 'change'],
+    validator: (_rule, value: number | null | undefined, callback) => {
+      if (form.unlimited) return callback()
+      if (value == null) return callback(new Error('请输入课程容量'))
+      if (!Number.isInteger(value) || value < minCapacity.value || value > 10000) {
+        return callback(new Error(`容量需为 ${minCapacity.value}–10000 的整数`))
+      }
+      callback()
+    },
+  }],
 }
 
 /** 容量下限：编辑时不能小于已报名人数 */
@@ -105,7 +116,7 @@ async function submit() {
     description: form.description || undefined,
     startTime: form.startTime,
     endTime: form.endTime,
-    capacity: form.unlimited ? null : (form.capacity ?? null),
+    capacity: form.unlimited ? null : form.capacity!,
   }
   saving.value = true
   try {
@@ -167,9 +178,14 @@ async function submit() {
           class="picker"
         />
       </el-form-item>
-      <el-form-item label="名额">
+      <el-form-item label="名额" prop="capacity">
         <div class="capacity">
-          <el-switch v-model="form.unlimited" active-text="不限人数" :disabled="started" />
+          <el-switch
+            v-model="form.unlimited"
+            active-text="不限人数"
+            :disabled="started"
+            @change="formRef?.clearValidate('capacity')"
+          />
           <el-input-number
             v-if="!form.unlimited"
             v-model="form.capacity"
