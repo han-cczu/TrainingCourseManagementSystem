@@ -64,6 +64,17 @@ docker compose -f deploy/docker-compose.yml up -d --build --wait
 
 停止服务：`docker compose -f deploy/docker-compose.yml down`。加上 `-v` 会同时清空数据库。
 
+### 演示数据（可选）
+
+```powershell
+.\deploy\demo\load-demo-data.ps1                 # 本地 Docker Compose；需要本机有 Python 3.10+
+.\deploy\demo\load-demo-data.ps1 -Target k8s     # 服务器上的 K8s（导入前自动备份，见部署手册 §5.4）
+```
+
+脚本会写入一家约 60 人的软件公司近三个月的培训记录：10 个部门的员工（含 2 个已离职、停用的账号），以及 28 门课程，其中已结束 16 门、进行中 2 门、未开始 10 门，另有约 590 条报名、取消和完成记录。所有时间都相对导入当天推算，满足报名、取消、完成的时间规则和容量限制。员工密码统一为 `Demo12345`，例如 `chenzhiyuan`（研发部负责人）、`wangwei`（研发）、`zengzimo`（本月新人）。
+
+**注意**：导入前会清空课程、报名和所有非管理员账号，只保留管理员。不要对有真实数据的库执行。E2E 自测会继续往库里写测试数据，跑完自测后可以重新导入一次。
+
 ## 本地开发
 
 ```bash
@@ -96,7 +107,7 @@ cd e2e && npm install && npm run setup && npm run all   # 25 项 UI 自测（需
 backend/     Spring Boot 后端：按业务分包（auth、user、course、enrollment、stats）
 frontend/    Vue 3 前端，以及 nginx 配置（反向代理、登录限流、安全响应头）
 e2e/         Playwright UI 自测脚本
-deploy/      docker-compose.yml、deploy.ps1、k8s/（kustomize：base + overlays/prod）
+deploy/      docker-compose.yml、deploy.ps1、k8s/（kustomize：base + overlays/prod）、demo/（演示数据）
 docs/        技术设计、实现计划、自测说明、AI Coding 使用说明、部署手册、截图
 .github/     CI 工作流、PR 模板
 CLAUDE.md    AI 协作约定
