@@ -73,6 +73,7 @@ await step('1. 管理员登录（带 redirect 回跳），导航显示「用户�
   await login(admin, 'admin', 'Admin12345')
   await admin.waitForURL((u) => u.pathname === '/admin/users')
   await menu(admin, '用户管理').waitFor()
+  await admin.locator('.el-table__row').first().waitFor() // 等列表数据加载完再截图
   await admin.screenshot({ path: `${SHOTS}/01-admin-user-manage.png` })
 })
 

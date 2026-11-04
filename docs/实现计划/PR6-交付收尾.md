@@ -12,14 +12,14 @@
 
 | 交付物 | 位置 | 状态 |
 |---|---|---|
-| 可运行的前端 / 后端 / MySQL 数据持久化 | `frontend/`、`backend/`、compose 数据卷 / K8s PVC | PR2–5 完成 |
-| README | `README.md` | 本 PR 收尾 |
-| 技术设计 | `docs/技术设计.md` | 各 PR 已同步，本 PR 通读校对 |
+| 可运行的前端 / 后端 / MySQL 数据持久化 | `frontend/`、`backend/`、compose 数据卷 / K8s PVC | ✅ PR2–5 |
+| README | `README.md` | ✅ |
+| 技术设计 | `docs/技术设计.md` | ✅ 已校对，补充测试策略、进度、按需引入说明 |
 | Docker 镜像构建 | `backend/Dockerfile`、`frontend/Dockerfile` | ✅ PR1 |
 | Kubernetes Deployment / Service | `deploy/k8s/` | ✅ PR1 |
-| 自测说明 | `docs/自测说明.md` | **本 PR** |
-| GitHub Pull Request | PR2–PR6 | 进行中 |
-| AI Coding 使用说明 | `docs/AI-Coding使用说明.md` | **本 PR** |
+| 自测说明 | `docs/自测说明.md` | ✅ |
+| GitHub Pull Request | PR2–PR6 | ✅ #1~#6 |
+| AI Coding 使用说明 | `docs/AI-Coding使用说明.md` | ✅ |
 
 ## 2. 任务
 
@@ -39,15 +39,18 @@
 - 经验与建议
 
 ### 2.3 工程打磨
-- [ ] 前端 Element Plus 改为按需引入（`unplugin-vue-components` + `unplugin-auto-import`），消除超过 500 KB 的打包警告，在 PR 里贴出打包体积前后对比
-- [ ] README 收尾：功能截图、功能列表、默认账号说明、文档导航
-- [ ] 通读技术设计，确保与实现一致；更新 §11 的实际进度
-- [ ] 检查所有 TODO 和占位页面都已清理
+- [x] 前端 Element Plus 改为按需引入（`unplugin-vue-components` + `unplugin-auto-import`），消除超过 500 KB 的打包警告，在 PR 里贴出打包体积前后对比
+- [x] README 收尾：功能截图、功能列表、默认账号说明、文档导航
+- [x] 通读技术设计，确保与实现一致；更新 §11 的实际进度
+- [x] 检查所有 TODO 和占位页面都已清理
 
 ### 2.4 （可选）上线
+
+> 本次**未执行**：用户决定先在本地完成全部功能，上线暂缓。清单和脚本已就绪（见部署手册）。
+
 上线暂缓。如果届时决定上线，按《部署手册》执行，并把线上地址和截图补充进 README 和自测说明。
 
 ## 3. 完成标准
-- [ ] 第 1 节交付物表全部 ✅
-- [ ] 按自测说明，从全新克隆的仓库开始可以完整复现（`git clone` → `docker compose up` → 按用例测试）
-- [ ] CI 通过
+- [x] 第 1 节交付物表全部 ✅
+- [x] 按自测说明，从全新克隆的仓库开始可以完整复现（`git clone` → `docker compose up` → 按用例测试）
+- [x] CI 通过

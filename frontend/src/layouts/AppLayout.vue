@@ -82,7 +82,8 @@ function onCommand(command: string) {
   white-space: nowrap;
 }
 
-.nav {
+/* 组件 CSS 按需懒加载、排在本文件之后，需比 .el-menu--horizontal.el-menu 更具体才能覆盖其底边框 */
+.layout-header .nav {
   flex: 1;
   min-width: 0;
   border-bottom: none;
