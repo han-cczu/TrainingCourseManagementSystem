@@ -48,4 +48,4 @@ docker compose -f deploy/docker-compose.yml up -d --build   # 前端 http://loca
 - 文档、注释、提交信息用中文。
 
 ## 部署
-生产部署（火山引擎单节点 K8s）的清单和脚本已就绪：`deploy/k8s/`、`deploy/deploy.ps1`、`docs/部署手册.md`。**目前暂缓上线**，先在本地完成全部功能。`secret.env` 不得提交。
+生产部署（火山引擎单节点 K8s）的清单和脚本已就绪：`deploy/k8s/`、`deploy/deploy.ps1`、`docs/部署手册.md`。2026-11-04 已用方式 B（不使用镜像仓库）上线，再次发布直接运行 `.\deploy\deploy.ps1`。`secret.env` 不得提交，丢失后数据库密码将无法对上。
