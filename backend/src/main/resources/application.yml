@@ -36,3 +36,11 @@ management:
 app:
   # 业务"当前时间"的时区（见技术设计 §5.4），与容器/JVM 时区无关
   time-zone: ${APP_TIME_ZONE:Asia/Shanghai}
+  jwt:
+    # 默认值仅供本地开发；prod profile 下仍为默认值会拒绝启动（ProdSafetyCheck）
+    secret: ${JWT_SECRET:dev-only-jwt-secret-change-me-0123456789abcdef}
+    ttl: 8h
+  admin:
+    # 首次启动、库中没有管理员时自动创建（技术设计 §4.2）
+    username: ${ADMIN_USERNAME:admin}
+    password: ${ADMIN_PASSWORD:Admin12345}
