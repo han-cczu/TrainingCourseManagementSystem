@@ -32,7 +32,8 @@ docker compose -f deploy/docker-compose.yml up -d --build   # 前端 http://loca
 
 ## 测试约定
 - 集成测试继承 `support/AbstractIntegrationTest`（Testcontainers MySQL + MockMvc，上下文共享，每个测试前清库、重置时钟），类名以 `IT` 结尾；纯单元测试以 `Test` 结尾。
-- 造数据用 `TestDataHelper`（`createEmployee/createAdmin/bearer/disable/count`）；控制时间用注入的 `MutableClock`（`setNow/advance`）。
+- 造数据用 `TestDataHelper`（`createEmployee/createAdmin/bearer/disable/insertCourse/insertEnrollment/count`）；控制时间用注入的 `MutableClock`（`setNow/advance`）。
+- **时钟拨动超过 8 小时后，之前签发的 token 已过期**（JWT 校验也用这个时钟），要在拨动后重新 `data.bearer(user)`。
 - 不要用 `@MockitoBean` 等改变上下文的注解，否则会创建新的 Spring 上下文和容器，测试变慢。
 - UI 自测脚本在 `e2e/`（Playwright），需先 `docker compose up`。
 

@@ -1,6 +1,13 @@
 package com.example.tcms.support;
 
+import java.sql.PreparedStatement;
+import java.sql.Statement;
+import java.time.LocalDateTime;
+import java.util.Objects;
+
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 
 import com.example.tcms.auth.JwtService;
 import com.example.tcms.user.Role;
@@ -48,6 +55,42 @@ public class TestDataHelper {
 
     public String bearer(User user) {
         return "Bearer " + jwtService.issue(user).token();
+    }
+
+    /**
+     * 直接写库造课程（绕过"开始时间必须在未来"等规则，便于构造已开课/已结束的课程）。
+     *
+     * @param capacity null 表示不限人数
+     * @return 课程 ID
+     */
+    public long insertCourse(String title, String instructor, LocalDateTime start, LocalDateTime end,
+                             Integer capacity, User createdBy) {
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+        jdbc.update(con -> {
+            PreparedStatement ps = con.prepareStatement("""
+                    INSERT INTO course (title, instructor, start_time, end_time, capacity, enrolled_count,
+                                        created_by, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?, 0, ?, NOW(), NOW())""", Statement.RETURN_GENERATED_KEYS);
+            ps.setString(1, title);
+            ps.setString(2, instructor);
+            ps.setObject(3, start);
+            ps.setObject(4, end);
+            ps.setObject(5, capacity);
+            ps.setLong(6, createdBy.getId());
+            return ps;
+        }, keyHolder);
+        return Objects.requireNonNull(keyHolder.getKey()).longValue();
+    }
+
+    public void setEnrolledCount(long courseId, int count) {
+        jdbc.update("UPDATE course SET enrolled_count = ? WHERE id = ?", count, courseId);
+    }
+
+    /** 直接写库造报名记录（PR4 之前用于验证 myStatus 连表） */
+    public void insertEnrollment(long courseId, long userId, String status) {
+        jdbc.update("""
+                INSERT INTO enrollment (course_id, user_id, status, enrolled_at, created_at, updated_at)
+                VALUES (?, ?, ?, NOW(), NOW(), NOW())""", courseId, userId, status);
     }
 
     public long count(String sql, Object... args) {

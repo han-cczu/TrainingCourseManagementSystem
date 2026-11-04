@@ -33,6 +33,13 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
+    healthcheck:
+      # Spring Boot 就绪后才算健康，`up --wait` 和前端的 depends_on 都会等到这一步
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8080/actuator/health/readiness"]
+      interval: 3s
+      timeout: 3s
+      start_period: 10s
+      retries: 40
 
   frontend:
     build: ../frontend
@@ -42,7 +49,8 @@ services:
     ports:
       - "8000:8080"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
 
 volumes:
   mysql-data:
