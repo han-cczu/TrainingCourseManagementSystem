@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.tcms.course.CourseMapper">
+
+    <!-- 当前用户在课程上的报名状态；(course_id, user_id) 唯一，LEFT JOIN 不会让课程行重复 -->
+    <sql id="courseWithMyStatus">
+        SELECT c.id, c.title, c.description, c.instructor, c.location,
+               c.start_time, c.end_time, c.capacity, c.enrolled_count, c.created_by,
+               c.created_at, c.updated_at,
+               e.status AS my_status
+        FROM course c
+        LEFT JOIN enrollment e ON e.course_id = c.id AND e.user_id = #{userId}
+    </sql>
+
+    <select id="selectCoursePage" resultType="com.example.tcms.course.Course">
+        <include refid="courseWithMyStatus"/>
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (c.title LIKE CONCAT('%', #{keyword}, '%') OR c.instructor LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="phase != null">
+                <choose>
+                    <when test="phase == 'UPCOMING'">AND c.start_time &gt; #{now}</when>
+                    <when test="phase == 'ONGOING'">AND c.start_time &lt;= #{now} AND c.end_time &gt; #{now}</when>
+                    <otherwise>AND c.end_time &lt;= #{now}</otherwise>
+                </choose>
+            </if>
+        </where>
+        <!-- 未开始的排在前面并按开始时间升序（最近要开的在最前），其余按开始时间降序（技术设计 §7.3） -->
+        ORDER BY (c.start_time &gt; #{now}) DESC,
+                 CASE WHEN c.start_time &gt; #{now} THEN c.start_time END ASC,
+                 c.start_time DESC,
+                 c.id DESC
+    </select>
+
+    <select id="selectCourseDetail" resultType="com.example.tcms.course.Course">
+        <include refid="courseWithMyStatus"/>
+        WHERE c.id = #{id}
+    </select>
+</mapper>
