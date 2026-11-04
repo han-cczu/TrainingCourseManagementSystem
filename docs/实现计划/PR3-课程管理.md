@@ -26,7 +26,7 @@
 | `course` | `CoursePhase` | 枚举，提供 `static of(start, end, now)` |
 | `course` | `CourseService` | 创建、编辑、分页查询、详情 |
 | `course` | `CourseController` | §7.3 的 4 个接口；创建和编辑需要 ADMIN |
-| `course/dto` | `CourseCreateRequest`、`CourseUpdateRequest`、`CourseQuery`、`CourseVO` | 见 2.2 |
+| `course/dto` | `CourseRequest`（创建与编辑共用）、`CourseVO` | 见 2.2；查询参数直接用 `@RequestParam` |
 | `resources/mapper` | `CourseMapper.xml` | 分页查询：`LEFT JOIN enrollment e ON e.course_id = c.id AND e.user_id = #{userId}` 带出 `myStatus` |
 
 ### 2.2 字段与校验
@@ -73,6 +73,8 @@
 | `router/index.ts` | 新增 `/courses/new`、`/courses/:id`、`/courses/:id/edit` 路由 |
 
 ## 5. 自测清单
+
+> 已自动化：`cd e2e; npm run pr3`（Playwright），见 `e2e/README.md`。
 1. 管理员新建一门 3 天后开课的课程，容量 2；再新建一门不限人数的课程
 2. 员工登录后能看到这两门课，但没有「新建」和「编辑」按钮；直接访问 `/courses/new` 会被跳走
 3. 搜索关键字、切换阶段筛选，确认结果正确
@@ -80,6 +82,6 @@
 5. 用 MySQL 客户端把某门课的 `start_time` 改到过去，确认编辑页的时间和容量字段变为禁用，但修改标题可以保存
 
 ## 6. 完成标准
-- [ ] 测试全部通过、CI 通过
-- [ ] 自测全部通过，截图贴在 PR 描述里
-- [ ] 列表排序规则已写回技术设计 §7.3
+- [x] 测试全部通过、CI 通过
+- [x] 自测全部通过，截图贴在 PR 描述里
+- [x] 列表排序规则已写回技术设计 §7.3
