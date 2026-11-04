@@ -2,10 +2,17 @@
 import { onMounted, reactive, ref } from 'vue'
 import { Search } from '@element-plus/icons-vue'
 import CapacityBar from '@/components/CapacityBar.vue'
+import EnrollAction from '@/components/EnrollAction.vue'
 import { coursesApi } from '@/api/courses'
 import { useAuthStore } from '@/stores/auth'
 import type { Course, CoursePhase } from '@/types/api'
-import { ENROLLMENT_STATUS_LABEL, PHASE_LABEL, PHASE_TAG_TYPE, formatTimeRange } from '@/utils/format'
+import {
+  ENROLLMENT_STATUS_LABEL,
+  ENROLLMENT_STATUS_TAG_TYPE,
+  PHASE_LABEL,
+  PHASE_TAG_TYPE,
+  formatTimeRange,
+} from '@/utils/format'
 
 const auth = useAuthStore()
 
@@ -35,6 +42,17 @@ async function load() {
 function search() {
   query.page = 1
   void load()
+}
+
+/** 报名/取消后只刷新这一张卡片，避免整页重载导致卡片位置跳动 */
+async function refreshCourse(id: number) {
+  try {
+    const fresh = await coursesApi.get(id)
+    const index = records.value.findIndex((c) => c.id === id)
+    if (index >= 0) records.value[index] = fresh
+  } catch {
+    void load()
+  }
 }
 
 onMounted(load)
@@ -86,7 +104,13 @@ onMounted(load)
           </dl>
           <CapacityBar :course="course" />
           <div class="card-foot">
-            <el-tag v-if="course.myStatus" size="small" type="primary" effect="plain" disable-transitions>
+            <el-tag
+              v-if="course.myStatus"
+              size="small"
+              :type="ENROLLMENT_STATUS_TAG_TYPE[course.myStatus]"
+              effect="plain"
+              disable-transitions
+            >
               {{ ENROLLMENT_STATUS_LABEL[course.myStatus] }}
             </el-tag>
             <div class="spacer" />
@@ -99,8 +123,9 @@ onMounted(load)
               编辑
             </el-button>
             <el-button link type="primary" @click="$router.push({ name: 'course-detail', params: { id: course.id } })">
-              查看详情
+              详情
             </el-button>
+            <EnrollAction :course="course" size="small" class="action" @changed="refreshCourse(course.id)" />
           </div>
         </el-card>
       </div>
@@ -197,7 +222,12 @@ onMounted(load)
 .card-foot {
   display: flex;
   align-items: center;
+  gap: 4px;
   margin-top: auto;
+}
+
+.card-foot .action {
+  margin-left: 8px;
 }
 
 .pagination {

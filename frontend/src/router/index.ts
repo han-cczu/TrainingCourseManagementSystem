@@ -58,6 +58,12 @@ const routes: RouteRecordRaw[] = [
         meta: { title: '编辑课程', requiresAdmin: true },
       },
       {
+        path: 'my/enrollments',
+        name: 'my-enrollments',
+        component: () => import('@/views/MyEnrollmentsView.vue'),
+        meta: { title: '我的报名' },
+      },
+      {
         path: 'account/password',
         name: 'change-password',
         component: () => import('@/views/account/ChangePasswordView.vue'),

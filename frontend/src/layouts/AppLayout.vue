@@ -10,9 +10,10 @@ interface NavItem {
   adminOnly?: boolean
 }
 
-// 后续 PR 中补充：我的报名（PR4）、统计（PR5）
+// 后续 PR 中补充：统计（PR5）
 const NAV_ITEMS: NavItem[] = [
   { path: '/courses', label: '课程' },
+  { path: '/my/enrollments', label: '我的报名' },
   { path: '/admin/users', label: '用户管理', adminOnly: true },
 ]
 
