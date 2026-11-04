@@ -1,0 +1,14 @@
+{
+  "name": "tcms-e2e",
+  "private": true,
+  "version": "0.1.0",
+  "description": "UI 自测脚本（Playwright），对应 docs/实现计划 各 PR 的自测清单",
+  "type": "module",
+  "scripts": {
+    "setup": "playwright install chromium",
+    "pr2": "node pr2-auth.mjs"
+  },
+  "devDependencies": {
+    "playwright": "1.56.1"
+  }
+}

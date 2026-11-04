@@ -1,13 +1,11 @@
 package com.example.tcms;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
+
+import com.example.tcms.support.AbstractIntegrationTest;
 
 /** 冒烟测试：上下文能启动、Flyway 迁移能在 MySQL 8.4 上成功执行。 */
-@SpringBootTest
-@Import(TestcontainersConfig.class)
-class TcmsApplicationTests {
+class TcmsApplicationTests extends AbstractIntegrationTest {
 
     @Test
     void contextLoads() {

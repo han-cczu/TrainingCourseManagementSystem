@@ -2,7 +2,7 @@
 
 公司内部培训课程系统：员工可以浏览课程、报名、取消报名、标记学习完成并查看自己的培训情况；管理员可以维护课程、查看报名人员、做统计和管理用户。
 
-> 当前进度：**项目骨架**已完成（后端工程、数据库迁移、统一异常、前端工程、Docker 镜像与 compose）。业务功能按 [技术设计 §11.1](docs/技术设计.md#111-pr-拆分) 的 PR 拆分逐步交付。
+> 当前进度：骨架 ✅ · 认证与用户管理 ✅（PR2）· 课程 / 报名 / 统计开发中。进度见 [实现计划](docs/实现计划/README.md)。
 
 ## 技术栈
 
@@ -36,6 +36,8 @@ docker compose -f deploy/docker-compose.yml up -d --build
 | 后端健康检查 | http://localhost:8080/actuator/health |
 | Swagger UI | http://localhost:8080/swagger-ui.html |
 | MySQL | localhost:3306（库 `tcms`，用户 `tcms` / `tcms123456`，仅本地开发默认值） |
+
+本地默认管理员账号：`admin` / `Admin12345`（仅开发环境；生产环境由 Secret 注入，prod 配置下使用默认值会拒绝启动）。员工可以在登录页点「立即注册」自助注册。
 
 停止：`docker compose -f deploy/docker-compose.yml down`（加 `-v` 会同时删除数据库数据）。
 

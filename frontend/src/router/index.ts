@@ -22,6 +22,12 @@ const routes: RouteRecordRaw[] = [
     meta: { title: '登录', guestOnly: true },
   },
   {
+    path: '/register',
+    name: 'register',
+    component: () => import('@/views/RegisterView.vue'),
+    meta: { title: '注册', guestOnly: true },
+  },
+  {
     path: '/',
     component: AppLayout,
     meta: { requiresAuth: true },
@@ -32,6 +38,18 @@ const routes: RouteRecordRaw[] = [
         name: 'courses',
         component: () => import('@/views/CourseListView.vue'),
         meta: { title: '课程列表' },
+      },
+      {
+        path: 'account/password',
+        name: 'change-password',
+        component: () => import('@/views/account/ChangePasswordView.vue'),
+        meta: { title: '修改密码' },
+      },
+      {
+        path: 'admin/users',
+        name: 'admin-users',
+        component: () => import('@/views/admin/UserManageView.vue'),
+        meta: { title: '用户管理', requiresAdmin: true },
       },
     ],
   },
