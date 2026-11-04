@@ -1,0 +1,37 @@
+# 生产环境：火山引擎单节点 K8s（技术设计 §9.2）
+# 应用镜像（tcms-backend / tcms-frontend）的地址和标签由 deploy/deploy.ps1 在发布时注入
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: tcms
+
+resources:
+  - ../../base
+  - storageclass-retain.yaml
+
+images:
+  # 服务器直连 docker.io 会超时，经 daocloud 镜像加速拉取
+  - name: mysql
+    newName: m.daocloud.io/docker.io/library/mysql
+    newTag: "8.4.13"
+
+secretGenerator:
+  - name: tcms-secret
+    envs:
+      - secret.env
+
+patches:
+  - target:
+      kind: StatefulSet
+      name: mysql
+    patch: |-
+      - op: add
+        path: /spec/volumeClaimTemplates/0/spec/storageClassName
+        value: local-path-retain
+  - target:
+      kind: PersistentVolumeClaim
+      name: mysql-backup
+    patch: |-
+      - op: add
+        path: /spec/storageClassName
+        value: local-path-retain

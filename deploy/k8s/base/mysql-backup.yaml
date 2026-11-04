@@ -1,0 +1,67 @@
+# 每日 03:00（北京时间）备份 tcms 库，保留 7 天（技术设计 §9.6，恢复步骤见 docs/部署手册.md）
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-backup
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: mysql-backup
+spec:
+  schedule: "0 3 * * *"
+  timeZone: Asia/Shanghai
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: mysql-backup
+        spec:
+          enableServiceLinks: false
+          restartPolicy: Never
+          containers:
+            - name: backup
+              image: mysql
+              command: ["bash", "-c"]
+              args:
+                - |
+                  set -euo pipefail
+                  file="/backup/tcms-$(date +%Y%m%d-%H%M%S).sql.gz"
+                  MYSQL_PWD="$DB_PASSWORD" mysqldump -h mysql -u tcms \
+                    --single-transaction --no-tablespaces --set-gtid-purged=OFF \
+                    --databases tcms | gzip > "$file.tmp"
+                  mv "$file.tmp" "$file"
+                  find /backup -name 'tcms-*.sql.gz' -mtime +7 -delete
+                  ls -lh /backup
+              env:
+                - name: DB_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: tcms-secret
+                      key: DB_PASSWORD
+                - name: TZ
+                  value: Asia/Shanghai
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 64Mi
+                limits:
+                  cpu: 500m
+                  memory: 256Mi
+              volumeMounts:
+                - name: backup
+                  mountPath: /backup
+          volumes:
+            - name: backup
+              persistentVolumeClaim:
+                claimName: mysql-backup

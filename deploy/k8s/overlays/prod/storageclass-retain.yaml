@@ -1,0 +1,9 @@
+# 与默认 local-path 相同的本地存储，但回收策略为 Retain：
+# 误删 PVC / 命名空间时，服务器上的数据目录（/opt/local-path-provisioner）会保留
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: local-path-retain
+provisioner: rancher.io/local-path
+reclaimPolicy: Retain
+volumeBindingMode: WaitForFirstConsumer

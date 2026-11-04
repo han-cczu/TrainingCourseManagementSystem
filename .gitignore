@@ -1,0 +1,26 @@
+# ---- backend ----
+backend/target/
+backend/.mvn/wrapper/maven-wrapper.jar
+
+# ---- frontend ----
+frontend/node_modules/
+frontend/dist/
+frontend/*.local
+*.tsbuildinfo
+
+# ---- secrets / local env ----
+.env
+*.env.local
+deploy/k8s/overlays/*/secret.env
+deploy/k8s/.release/
+
+# ---- IDE / OS ----
+.idea/
+*.iml
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+Thumbs.db
+
+# ---- logs ----
+*.log

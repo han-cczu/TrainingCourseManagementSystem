@@ -1,0 +1,16 @@
+# 生产环境（K8s 中通过 SPRING_PROFILES_ACTIVE=prod 启用，技术设计 §9.4）
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
+server:
+  # 信任集群内 nginx 转发的 X-Forwarded-*（Tomcat 默认只信任内网地址段）
+  forward-headers-strategy: native
+
+spring:
+  lifecycle:
+    # 收到 SIGTERM 后最多等 20 秒处理完在途请求（K8s terminationGracePeriodSeconds 为 45 秒）
+    timeout-per-shutdown-phase: 20s
