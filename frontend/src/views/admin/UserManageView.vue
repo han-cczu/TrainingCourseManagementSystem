@@ -165,7 +165,7 @@ async function submitReset() {
       </el-table-column>
       <el-table-column label="角色" width="90">
         <template #default="{ row }">
-          <el-tag :type="row.role === 'ADMIN' ? 'warning' : 'info'" size="small">{{ ROLE_LABEL[row.role as Role] }}</el-tag>
+          <el-tag :type="row.role === 'ADMIN' ? 'warning' : 'info'" size="small" disable-transitions>{{ ROLE_LABEL[row.role as Role] }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column label="状态" width="90">
