@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.tcms.stats.StatsMapper">
+
+    <!--
+      全局概览（技术设计 §7.5 统计口径）：
+      - 课程阶段与 CoursePhase 一致：start_time > now 未开始；start_time <= now < end_time 进行中；end_time <= now 已结束
+      - 有效报名 = ENROLLED + COMPLETED；参与员工 = 至少有一条有效报名的不同用户
+    -->
+    <select id="selectOverview" resultType="com.example.tcms.stats.dto.OverviewRow">
+        SELECT
+            (SELECT COUNT(*) FROM course)                                                      AS course_count,
+            (SELECT COUNT(*) FROM course WHERE start_time &gt; #{now})                          AS upcoming_count,
+            (SELECT COUNT(*) FROM course WHERE start_time &lt;= #{now} AND end_time &gt; #{now}) AS ongoing_count,
+            (SELECT COUNT(*) FROM course WHERE end_time &lt;= #{now})                           AS ended_count,
+            (SELECT COUNT(*) FROM enrollment WHERE status IN ('ENROLLED', 'COMPLETED'))        AS active_enrollments,
+            (SELECT COUNT(*) FROM enrollment WHERE status = 'COMPLETED')                       AS completed_count,
+            (SELECT COUNT(DISTINCT user_id) FROM enrollment
+              WHERE status IN ('ENROLLED', 'COMPLETED'))                                       AS participant_count,
+            (SELECT COUNT(*) FROM sys_user)                                                    AS user_count
+    </select>
+
+    <!--
+      按课程统计。已报名人数直接用 course.enrolled_count（与报名事务同步维护，等于 ENROLLED + COMPLETED 行数）。
+      排序只接受枚举值，映射为固定的 ORDER BY；完成率为 NULL（无人报名）的课程在 DESC 下排在最后。
+    -->
+    <select id="selectCourseStats" resultType="com.example.tcms.stats.dto.CourseStatsRow">
+        SELECT c.id, c.title, c.instructor, c.start_time, c.end_time, c.capacity, c.enrolled_count,
+               COALESCE(SUM(e.status = 'COMPLETED'), 0) AS completed_count
+        FROM course c
+        LEFT JOIN enrollment e ON e.course_id = c.id
+        GROUP BY c.id
+        <choose>
+            <when test="sort == 'COMPLETION_RATE'">
+                ORDER BY CASE WHEN c.enrolled_count = 0 THEN NULL
+                              ELSE COALESCE(SUM(e.status = 'COMPLETED'), 0) / c.enrolled_count END DESC,
+                         c.enrolled_count DESC, c.id DESC
+            </when>
+            <otherwise>
+                ORDER BY c.enrolled_count DESC, c.id DESC
+            </otherwise>
+        </choose>
+        LIMIT #{limit}
+    </select>
+</mapper>
