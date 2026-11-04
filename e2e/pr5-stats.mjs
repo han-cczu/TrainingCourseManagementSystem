@@ -43,7 +43,7 @@ await step('0. 记录统计基线；建一门容量为 4 的课：3 人报名、
 
 await step('1. 概览卡片 = 基线 + 本次增量（课程 +1、有效报名 +3、完成 +1、参与员工 +3、用户 +4）', async () => {
   await login(admin, ADMIN.username, ADMIN.password)
-  await admin.locator('.el-menu-item', { hasText: '统计' }).click()
+  await admin.getByRole('navigation', { name: '主导航' }).getByRole('link', { name: '统计', exact: true }).click()
   await waitPath(admin, '/stats')
   await admin.locator('.stat-card').first().waitFor()
 
@@ -93,7 +93,9 @@ await step('3. 切换「按完成率」后，完成率列从高到低排列（�
 
 await step('4. 员工看不到「统计」，直接访问 /stats 被跳走，调用接口返回 403', async () => {
   await login(emp, employees[0].username, employees[0].password)
-  if ((await emp.locator('.el-menu-item', { hasText: '统计' }).count()) !== 0) throw new Error('员工不应看到「统计」')
+  if ((await emp.getByRole('navigation', { name: '主导航' }).getByRole('link', { name: '统计', exact: true }).count()) !== 0) {
+    throw new Error('员工不应看到「统计」')
+  }
   await emp.goto(`${BASE}/stats`)
   await waitPath(emp, '/courses')
   const resp = await emp.request.get(`${BASE}/api/stats/overview`, { headers: { Authorization: employees[0].token } })

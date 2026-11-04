@@ -50,7 +50,7 @@ const admin = await newPage()
 const emp = await newPage()
 
 const message = (page, text) => page.locator('.el-message', { hasText: text }).first().waitFor()
-const menu = (page, text) => page.locator('.el-menu-item', { hasText: text })
+const menu = (page, name) => page.getByRole('navigation', { name: '主导航' }).getByRole('link', { name, exact: true })
 
 async function login(page, username, password) {
   if (!page.url().includes('/login')) await page.goto(`${BASE}/login`)

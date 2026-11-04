@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
-import { Refresh } from '@element-plus/icons-vue'
+import { CircleCheck, DataAnalysis, Reading, Refresh, Tickets, User } from '@element-plus/icons-vue'
+import PageHeading from '@/components/PageHeading.vue'
 import { statsApi } from '@/api/stats'
 import type { CourseStats, CourseStatsSort, StatsOverview } from '@/types/api'
 import { PHASE_LABEL, PHASE_TAG_TYPE, formatPercent, formatTimeRange, toPercentage } from '@/utils/format'
@@ -40,31 +41,41 @@ onMounted(refresh)
 
 <template>
   <div class="page-card">
+    <PageHeading title="统计" description="查看整体参与情况，以及各课程的报名和完成数据。">
+      <template #actions>
+        <el-button :icon="Refresh" :loading="loadingOverview || loadingCourses" @click="refresh">刷新</el-button>
+      </template>
+    </PageHeading>
     <div v-loading="loadingOverview" class="cards">
       <template v-if="overview">
-        <el-card shadow="never" class="stat-card" data-stat="courseCount">
+        <el-card shadow="never" class="ui-panel stat-card" data-stat="courseCount">
+          <span class="metric-icon" aria-hidden="true"><Reading /></span>
           <div class="label">课程总数</div>
           <div class="value">{{ overview.courseCount }}</div>
           <div class="hint">
             报名中 {{ overview.upcomingCount }} · 进行中 {{ overview.ongoingCount }} · 已结束 {{ overview.endedCount }}
           </div>
         </el-card>
-        <el-card shadow="never" class="stat-card" data-stat="activeEnrollments">
+        <el-card shadow="never" class="ui-panel stat-card" data-stat="activeEnrollments">
+          <span class="metric-icon" aria-hidden="true"><Tickets /></span>
           <div class="label">有效报名人次</div>
           <div class="value">{{ overview.activeEnrollments }}</div>
           <div class="hint">已报名 + 已完成，不含已取消</div>
         </el-card>
-        <el-card shadow="never" class="stat-card" data-stat="completedCount">
+        <el-card shadow="never" class="ui-panel stat-card" data-stat="completedCount">
+          <span class="metric-icon is-success" aria-hidden="true"><CircleCheck /></span>
           <div class="label">完成人次</div>
           <div class="value">{{ overview.completedCount }}</div>
           <div class="hint">本人或管理员确认完成</div>
         </el-card>
-        <el-card shadow="never" class="stat-card" data-stat="completionRate">
+        <el-card shadow="never" class="ui-panel stat-card" data-stat="completionRate">
+          <span class="metric-icon is-success" aria-hidden="true"><DataAnalysis /></span>
           <div class="label">整体完成率</div>
           <div class="value">{{ formatPercent(overview.completionRate) }}</div>
           <div class="hint">完成人次 ÷ 有效报名人次</div>
         </el-card>
-        <el-card shadow="never" class="stat-card" data-stat="participantCount">
+        <el-card shadow="never" class="ui-panel stat-card" data-stat="participantCount">
+          <span class="metric-icon is-neutral" aria-hidden="true"><User /></span>
           <div class="label">参与员工</div>
           <div class="value">{{ overview.participantCount }}</div>
           <div class="hint">共 {{ overview.userCount }} 名用户</div>
@@ -72,26 +83,25 @@ onMounted(refresh)
       </template>
     </div>
 
-    <el-card>
+    <el-card class="ui-panel" shadow="never">
       <template #header>
         <div class="header">
-          <span>课程统计</span>
+          <h2 class="panel-title">课程统计</h2>
           <div class="controls">
-            <el-radio-group v-model="query.sort" size="small" @change="loadCourses">
+            <el-radio-group v-model="query.sort" size="small" aria-label="课程统计排序" @change="loadCourses">
               <el-radio-button value="ENROLLED">按报名人数</el-radio-button>
               <el-radio-button value="COMPLETION_RATE">按完成率</el-radio-button>
             </el-radio-group>
-            <el-select v-model="query.limit" size="small" class="limit" @change="loadCourses">
+            <el-select v-model="query.limit" size="small" class="limit" aria-label="显示课程数量" @change="loadCourses">
               <el-option :value="10" label="前 10 门" />
               <el-option :value="20" label="前 20 门" />
               <el-option :value="50" label="前 50 门" />
             </el-select>
-            <el-button size="small" :icon="Refresh" @click="refresh">刷新</el-button>
           </div>
         </div>
       </template>
 
-      <el-table v-loading="loadingCourses" :data="courses" row-key="courseId" empty-text="暂无课程">
+      <el-table v-loading="loadingCourses" :data="courses" row-key="courseId" empty-text="暂无课程" class="ui-table">
         <el-table-column type="index" label="#" width="50" />
         <el-table-column label="课程" min-width="200">
           <template #default="{ row }">
@@ -148,9 +158,9 @@ onMounted(refresh)
 <style scoped>
 .cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-  gap: 16px;
-  margin-bottom: 16px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
   min-height: 120px;
 }
 
@@ -160,10 +170,11 @@ onMounted(refresh)
 }
 
 .value {
-  margin: 8px 0 4px;
+  margin: 4px 0;
   font-size: 28px;
   font-weight: 600;
   color: var(--el-text-color-primary);
+  font-variant-numeric: tabular-nums;
 }
 
 .hint {
@@ -220,5 +231,17 @@ onMounted(refresh)
   width: 48px;
   text-align: right;
   font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 1120px) {
+  .cards {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 540px) {
+  .cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 </style>
