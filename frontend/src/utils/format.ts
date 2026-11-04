@@ -15,6 +15,16 @@ export function formatTimeRange(start: string, end: string): string {
     : `${s.format('YYYY-MM-DD HH:mm')} ~ ${e.format('YYYY-MM-DD HH:mm')}`
 }
 
+/** 0~1 的比率显示为百分比（保留 1 位）；null（分母为 0）显示为 "-" */
+export function formatPercent(rate: number | null | undefined): string {
+  return rate === null || rate === undefined ? '-' : `${(rate * 100).toFixed(1)}%`
+}
+
+/** 0~1 的比率转为 el-progress 需要的 0~100 */
+export function toPercentage(rate: number | null | undefined): number {
+  return rate === null || rate === undefined ? 0 : Math.min(100, Math.round(rate * 1000) / 10)
+}
+
 /** 提交给后端的时间格式（ISO 本地时间） */
 export const API_DATETIME_FORMAT = 'YYYY-MM-DD[T]HH:mm:ss'
 
