@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.tcms.enrollment.EnrollmentMapper">
+
+    <!-- 课程报名人员：按报名时间倒序；completed_by 连表得到确认人姓名 -->
+    <select id="selectCourseEnrollments" resultType="com.example.tcms.enrollment.dto.CourseEnrollmentVO">
+        SELECT e.id, e.user_id, u.username, u.real_name, u.department,
+               e.status, e.enrolled_at, e.cancelled_at, e.completed_at, e.completed_by,
+               cu.real_name AS completed_by_name
+        FROM enrollment e
+        JOIN sys_user u ON u.id = e.user_id
+        LEFT JOIN sys_user cu ON cu.id = e.completed_by
+        WHERE e.course_id = #{courseId}
+        <if test="status != null">AND e.status = #{status}</if>
+        ORDER BY e.enrolled_at DESC, e.id DESC
+    </select>
+
+    <!-- 我的报名：按课程开始时间倒序（最新的课程在前） -->
+    <select id="selectMyEnrollments" resultType="com.example.tcms.enrollment.dto.MyEnrollmentVO">
+        SELECT e.id, e.status, e.enrolled_at, e.cancelled_at, e.completed_at, e.completed_by,
+               c.id AS course_id, c.title, c.instructor, c.location, c.start_time, c.end_time
+        FROM enrollment e
+        JOIN course c ON c.id = e.course_id
+        WHERE e.user_id = #{userId}
+        <if test="status != null">AND e.status = #{status}</if>
+        ORDER BY c.start_time DESC, e.id DESC
+    </select>
+
+    <select id="countByStatusForUser" resultType="com.example.tcms.enrollment.dto.StatusCount">
+        SELECT status, COUNT(*) AS total
+        FROM enrollment
+        WHERE user_id = #{userId}
+        GROUP BY status
+    </select>
+</mapper>
