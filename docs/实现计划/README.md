@@ -12,8 +12,8 @@
 | [PR2](PR2-认证与用户管理.md) | `feat/auth` | 注册、登录、JWT、用户管理、CI | PR1 | ✅ 已合并 #2 |
 | [PR3](PR3-课程管理.md) | `feat/course` | 课程增改查、课程列表、时间规则 | PR2 | ✅ 已合并 #3 |
 | [PR4](PR4-报名与容量限制.md) | `feat/enrollment` | 报名/取消/完成、我的报名、报名人员、容量限制与并发 | PR3 | ✅ 已合并 #4 |
-| [PR5](PR5-统计.md) | `feat/stats` | 全局统计、课程统计 | PR4 | 🔄 评审中 |
-| [PR6](PR6-交付收尾.md) | `chore/delivery` | 自测说明、AI Coding 使用说明、前端按需引入、README 收尾 | PR5 | 待开始 |
+| [PR5](PR5-统计.md) | `feat/stats` | 全局统计、课程统计 | PR4 | ✅ 已合并 #5 |
+| [PR6](PR6-交付收尾.md) | `chore/delivery` | 自测说明、AI Coding 使用说明、前端按需引入、README 收尾 | PR5 | 🔄 评审中 |
 
 生产部署（技术设计 §9、[部署手册](../部署手册.md)）的清单和脚本已在 PR1 中完成，**上线暂缓**，所有功能在本地完成后再执行。
 
