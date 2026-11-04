@@ -12,6 +12,8 @@ npm run setup        # 首次运行：下载 Chromium
 npm run pr2          # PR2：认证与用户管理
 npm run pr3          # PR3：课程管理
 npm run pr4          # PR4：报名、取消、完成与容量限制
+npm run pr5          # PR5：基础统计
+npm run all          # 全部（PR2 含登录限流，放在最后执行）
 ```
 
 公共工具在 `lib.mjs`：创建浏览器和页面、逐项记录结果、失败时自动截图、登录、通过接口注册员工、执行 SQL（用于构造「已开课」这类状态）。脚本启动时会先等后端就绪。
