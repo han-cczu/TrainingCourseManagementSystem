@@ -9,6 +9,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 
+import com.example.tcms.auth.CurrentUser;
 import com.example.tcms.auth.JwtService;
 import com.example.tcms.user.Role;
 import com.example.tcms.user.User;
@@ -80,6 +81,19 @@ public class TestDataHelper {
             return ps;
         }, keyHolder);
         return Objects.requireNonNull(keyHolder.getKey()).longValue();
+    }
+
+    public CurrentUser currentUser(User user) {
+        return new CurrentUser(user.getId(), user.getUsername(), user.getRole());
+    }
+
+    public long enrolledCount(long courseId) {
+        return count("SELECT enrolled_count FROM course WHERE id = ?", courseId);
+    }
+
+    /** 占用名额的报名记录数（ENROLLED + COMPLETED），应始终等于 course.enrolled_count */
+    public long seatRows(long courseId) {
+        return count("SELECT COUNT(*) FROM enrollment WHERE course_id = ? AND status IN ('ENROLLED', 'COMPLETED')", courseId);
     }
 
     public void setEnrolledCount(long courseId, int count) {
