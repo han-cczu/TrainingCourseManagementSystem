@@ -70,6 +70,12 @@ const routes: RouteRecordRaw[] = [
         meta: { title: '修改密码' },
       },
       {
+        path: 'stats',
+        name: 'stats',
+        component: () => import('@/views/admin/StatsView.vue'),
+        meta: { title: '统计', requiresAdmin: true },
+      },
+      {
         path: 'admin/users',
         name: 'admin-users',
         component: () => import('@/views/admin/UserManageView.vue'),

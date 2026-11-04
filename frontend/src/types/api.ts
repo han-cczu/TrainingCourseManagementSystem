@@ -159,6 +159,40 @@ export interface EnrollmentQuery extends PageQuery {
   status?: EnrollmentStatus
 }
 
+// ---------- 统计（管理员） ----------
+
+/** 全局概览；比率为 0~1，分母为 0 时为 null */
+export interface StatsOverview {
+  courseCount: number
+  upcomingCount: number
+  ongoingCount: number
+  endedCount: number
+  /** 有效报名人次 = 已报名 + 已完成 */
+  activeEnrollments: number
+  completedCount: number
+  completionRate: number | null
+  participantCount: number
+  userCount: number
+}
+
+export type CourseStatsSort = 'ENROLLED' | 'COMPLETION_RATE'
+
+export interface CourseStats {
+  courseId: number
+  title: string
+  instructor: string
+  startTime: string
+  endTime: string
+  phase: CoursePhase
+  capacity: number | null
+  enrolledCount: number
+  completedCount: number
+  /** 完成数 / 已报名人数；无人报名为 null */
+  completionRate: number | null
+  /** 已报名人数 / 容量；不限人数为 null */
+  fillRate: number | null
+}
+
 // ---------- 用户管理 ----------
 
 export interface CreateUserRequest extends RegisterRequest {
