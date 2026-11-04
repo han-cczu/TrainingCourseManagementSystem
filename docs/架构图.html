@@ -1,0 +1,570 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TCMS 架构图</title>
+<style>
+/* 无外部字体或脚本依赖：本地离线可读。技术栈卡片 + 两张 SVG 图 + 发布流程 + 环境对照。 */
+:root {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --fg: #1b2330;
+  --muted: #5d6878;
+  --line: #c9d0db;
+  --accent: #2463c9;
+  --front: #2f8f5b;   --front-bg: #e8f4ed;
+  --back: #2463c9;    --back-bg: #e8eefa;
+  --db: #b06a12;      --db-bg: #faf0e2;
+  --ops: #6b5bb5;     --ops-bg: #efedf8;
+  --chip: #f1f3f6;
+  --ok: #2f8f5b;
+  --warn: #b5501f;
+  --font-body: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12161d; --surface: #1a2029; --fg: #e3e8ef; --muted: #98a3b3; --line: #364050; --accent: #6f9ff0;
+    --front: #5cc28b; --front-bg: #183025; --back: #6f9ff0; --back-bg: #18253d;
+    --db: #e0a050; --db-bg: #33271a; --ops: #a597ea; --ops-bg: #26223d;
+    --chip: #232a35; --ok: #5cc28b; --warn: #ec8a5a; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12161d; --surface: #1a2029; --fg: #e3e8ef; --muted: #98a3b3; --line: #364050; --accent: #6f9ff0;
+  --front: #5cc28b; --front-bg: #183025; --back: #6f9ff0; --back-bg: #18253d;
+  --db: #e0a050; --db-bg: #33271a; --ops: #a597ea; --ops-bg: #26223d;
+  --chip: #232a35; --ok: #5cc28b; --warn: #ec8a5a; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg); color: var(--fg);
+  font-family: var(--font-body); font-size: 15px; line-height: 1.7;
+}
+.wrap {
+  max-width: 1160px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 32px 56px;
+  display: grid; gap: 40px;
+}
+header { display: grid; gap: 8px; }
+h1 { font-size: 28px; line-height: 1.3; margin: 0; text-wrap: balance; }
+h2 { font-size: 20px; margin: 0; text-wrap: balance; }
+h3 { font-size: 15px; margin: 0; }
+p { margin: 0; max-width: 68ch; }
+.sub { color: var(--muted); }
+.mono { font-family: var(--font-mono); font-size: 0.92em; }
+.status {
+  display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center;
+  font-size: 13px; color: var(--muted); margin-top: 4px;
+}
+.pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 2px 10px; border-radius: 999px; background: var(--surface);
+  border: 1px solid var(--line); color: var(--fg);
+}
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); }
+nav { display: flex; flex-wrap: wrap; gap: 8px; }
+nav a {
+  color: var(--accent); text-decoration: none; font-size: 14px;
+  padding: 4px 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface);
+}
+nav a:hover, nav a:focus-visible { border-color: var(--accent); outline: none; }
+section { display: grid; gap: 14px; scroll-margin-top: 16px; }
+.figure {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+  overflow-x: auto; -webkit-overflow-scrolling: touch;
+}
+.figure svg { display: block; width: 100%; min-width: 860px; height: auto; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.sw { width: 12px; height: 12px; border-radius: 3px; border: 1.5px solid; }
+.notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.note { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; display: grid; gap: 6px; min-width: 0; }
+.note p { font-size: 14px; color: var(--muted); }
+.note.warn h3 { color: var(--warn); }
+.stack-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr)); gap: 14px; }
+.stack-card { background: var(--surface); border: 1px solid var(--line); border-top: 3px solid var(--accent); border-radius: 8px; padding: 18px; display: grid; align-content: start; gap: 12px; min-width: 0; }
+.stack-card.front { border-top-color: var(--front); }
+.stack-card.data { border-top-color: var(--db); }
+.stack-card.ops { border-top-color: var(--ops); }
+.stack-card h3 { font-size: 16px; }
+.stack-card p { color: var(--muted); font-size: 13px; }
+.tech-tags { display: flex; flex-wrap: wrap; gap: 7px; margin: 0; padding: 0; list-style: none; }
+.tech-tags li { background: var(--chip); border-radius: 5px; padding: 4px 8px; font-size: 13px; overflow-wrap: anywhere; }
+.tech-tags small { color: var(--muted); font-family: var(--font-mono); font-size: 12px; margin-left: 4px; }
+.source-note, .scroll-hint { color: var(--muted); font-size: 13px; max-width: none; }
+.source-note a { color: var(--accent); text-underline-offset: 3px; overflow-wrap: anywhere; }
+.figure:focus-visible, .table-wrap:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+footer { border-top: 1px solid var(--line); padding-top: 18px; display: grid; gap: 8px; }
+ol.flow { margin: 0; padding: 0; list-style: none; display: grid; gap: 0; counter-reset: s; }
+ol.flow li {
+  counter-increment: s; display: grid; grid-template-columns: 34px 1fr; gap: 12px;
+  padding: 10px 0; border-bottom: 1px solid var(--line); min-width: 0;
+}
+ol.flow li:last-child { border-bottom: 0; }
+ol.flow li::before {
+  content: counter(s); font-family: var(--font-mono); font-size: 13px;
+  width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--ops-bg); color: var(--ops); border: 1px solid var(--ops); margin-top: 2px;
+}
+ol.flow b { font-weight: 500; }
+ol.flow span { color: var(--muted); font-size: 14px; display: block; }
+.table-wrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+table { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 14px; }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-weight: 500; color: var(--muted); font-size: 13px; letter-spacing: 0.02em; }
+tr:last-child td { border-bottom: 0; }
+td:first-child { color: var(--muted); white-space: nowrap; }
+code { font-family: var(--font-mono); font-size: 0.9em; background: var(--chip); padding: 1px 5px; border-radius: 4px; }
+
+/* SVG 样式：全部取主题变量 */
+svg text { font-family: var(--font-body); fill: var(--fg); }
+svg .t-mono { font-family: var(--font-mono); }
+svg .t-title { font-size: 16px; font-weight: 700; }
+svg .t-h { font-size: 14px; font-weight: 700; }
+svg .t-b { font-size: 13px; }
+svg .t-s { font-size: 12px; fill: var(--muted); }
+svg .t-lbl { font-size: 12px; fill: var(--muted); }
+svg .band-front { fill: var(--front-bg); stroke: var(--front); stroke-width: 1.5; }
+svg .band-back { fill: var(--back-bg); stroke: var(--back); stroke-width: 1.5; }
+svg .band-db { fill: var(--db-bg); stroke: var(--db); stroke-width: 1.5; }
+svg .band-ops { fill: var(--ops-bg); stroke: var(--ops); stroke-width: 1.5; }
+svg .box { fill: var(--surface); stroke: var(--line); stroke-width: 1.2; }
+svg .box-front { fill: var(--surface); stroke: var(--front); stroke-width: 1.2; }
+svg .box-back { fill: var(--surface); stroke: var(--back); stroke-width: 1.2; }
+svg .box-db { fill: var(--surface); stroke: var(--db); stroke-width: 1.2; }
+svg .box-ops { fill: var(--surface); stroke: var(--ops); stroke-width: 1.2; }
+svg .chip { fill: var(--chip); stroke: none; }
+svg .frame { fill: none; stroke: var(--line); stroke-width: 1.5; }
+svg .ns { fill: none; stroke: var(--muted); stroke-width: 1.2; stroke-dasharray: 6 5; }
+svg .arrow { fill: none; stroke: var(--muted); stroke-width: 1.6; marker-end: url(#ah); }
+svg .arrow-ops { fill: none; stroke: var(--ops); stroke-width: 1.6; marker-end: url(#ah-ops); stroke-dasharray: 5 4; }
+svg .ah { fill: var(--muted); }
+svg .ah-ops { fill: var(--ops); }
+svg .lock { fill: var(--warn); font-size: 12px; font-weight: 500; }
+svg .bgcut { fill: var(--surface); }
+svg .gate { fill: var(--warn); }
+@media (max-width: 560px) {
+  h1 { font-size: 23px; }
+}
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>培训课程管理系统（TCMS）架构</h1>
+    <p class="sub">依据仓库代码、依赖锁文件与部署清单整理，核对日期：2026-11-04。副本数表示配置目标，服务器信息来自部署文档；此页不实时探测线上版本、Pod 健康或云安全组。</p>
+    <div class="status">
+      <span class="pill">代码基线 <span class="mono">1063305</span></span>
+      <span class="pill">配置副本：前端 2 · 后端 2 · MySQL 1</span>
+      <span class="pill">业务入口 <span class="mono">http://101.96.237.10:30080</span></span>
+    </div>
+    <nav aria-label="页面目录">
+      <a href="#stack">技术栈</a>
+      <a href="#app">系统架构</a>
+      <a href="#prod">线上架构</a>
+      <a href="#release">发布流程</a>
+      <a href="#envs">本地与线上对照</a>
+    </nav>
+  </header>
+
+  <section id="stack" aria-labelledby="stack-title">
+    <h2 id="stack-title">技术栈：组件、版本与职责</h2>
+    <p class="sub">前端版本取自 pnpm 锁文件，后端固定版本取自 pom.xml，传递依赖取自本地 Maven 测试报告。构建工具在开发机或 CI 中运行；生产前端容器托管编译后的静态文件。</p>
+    <div class="stack-grid">
+      <article class="stack-card front">
+        <h3>前端框架与状态</h3>
+        <ul class="tech-tags"><li>Vue <small>3.5.44</small></li><li>TypeScript <small>6.0.3</small></li><li>Vue Router <small>5.4.0</small></li><li>Pinia <small>4.1.0</small></li></ul>
+        <p>Vue 渲染页面，Router 管理路由与前端访问守卫，Pinia 保存登录状态。TypeScript 在构建时检查并编译为 JavaScript。</p>
+      </article>
+      <article class="stack-card front">
+        <h3>界面与接口访问</h3>
+        <ul class="tech-tags"><li>Element Plus <small>2.14.7</small></li><li>Axios <small>1.21.0</small></li><li>dayjs <small>1.11.23</small></li></ul>
+        <p>组件按需引入；Axios 统一附带 token、处理请求超时和错误；dayjs 格式化课程时间。</p>
+      </article>
+      <article class="stack-card">
+        <h3>后端应用与数据访问</h3>
+        <ul class="tech-tags"><li>Java <small>21</small></li><li>Spring Boot <small>4.1.2</small></li><li>MyBatis-Plus <small>3.5.18</small></li><li>Bean Validation</li></ul>
+        <p>Spring MVC 提供 REST API，Service 承载事务与业务规则；Mapper 负责 CRUD、连表查询及行锁。业务时间统一从注入的 Clock 获取。</p>
+      </article>
+      <article class="stack-card">
+        <h3>认证与密码存储</h3>
+        <ul class="tech-tags"><li>Spring Security <small>7.1.2</small></li><li>JWT <small>HS256</small></li><li>PBKDF2-HMAC-SHA256</li><li>兼容旧 BCrypt</li></ul>
+        <p>后端验证 JWT，并查询用户是否启用及其当前角色。新密码采用 PBKDF2（60 万次迭代），原有 BCrypt 账号仍可验证。</p>
+      </article>
+      <article class="stack-card data">
+        <h3>数据库与版本迁移</h3>
+        <ul class="tech-tags"><li>MySQL <small>8.4.13</small></li><li>InnoDB</li><li>Flyway <small>12.4.0</small></li></ul>
+        <p>课程行锁、事务与唯一索引保证报名一致性；Flyway 在后端启动时执行增量迁移。线上使用单副本 MySQL 和本地持久卷。</p>
+      </article>
+      <article class="stack-card ops">
+        <h3>编译、构建与 API 文档</h3>
+        <ul class="tech-tags"><li>Vite <small>8.3.5</small></li><li>Node.js <small>24（镜像）</small></li><li>pnpm <small>10.31.0</small></li><li>Maven Wrapper</li><li>springdoc <small>3.2.0</small></li></ul>
+        <p>Vite 构建前端，Maven 打包后端，springdoc 生成 OpenAPI / Swagger UI。Node.js 用于前端构建，生产页面由 nginx 提供。</p>
+      </article>
+      <article class="stack-card ops">
+        <h3>运行环境与集群</h3>
+        <ul class="tech-tags"><li>nginx <small>非 root 镜像</small></li><li>Kubernetes <small>1.36.6*</small></li><li>containerd <small>2.4.2*</small></li><li>Calico*</li><li>local-path*</li></ul>
+        <p>Kubernetes 调度 Pod，节点 kubelet 通过 CRI 调用 containerd；服务器无需 Docker Engine。标 * 的版本或组件来自服务器部署文档，非本页实时检测。</p>
+      </article>
+      <article class="stack-card ops">
+        <h3>交付与持续集成</h3>
+        <ul class="tech-tags"><li>Docker / Compose</li><li>Kustomize</li><li>PowerShell</li><li>GitHub Actions</li></ul>
+        <p>Docker 在本地构建镜像，Compose 用于本地联调；deploy.ps1 发布 K8s 清单。CI 执行后端测试和前端构建，发布仍需手动触发。</p>
+      </article>
+      <article class="stack-card">
+        <h3>自动化测试</h3>
+        <ul class="tech-tags"><li>JUnit Jupiter <small>6.0.3</small></li><li>MockMvc</li><li>Testcontainers <small>2.0.5</small></li><li>Playwright <small>1.56.1</small></li><li>vue-tsc <small>3.3.14</small></li></ul>
+        <p>后端在真实 MySQL 上做接口和并发测试；Playwright 操作 Chromium 检查 UI。JUnit 版本按实际解析依赖标注；UI 自测尚未接入当前 CI。</p>
+      </article>
+    </div>
+    <p class="source-note">版本来源：<a href="../frontend/pnpm-lock.yaml">前端锁文件</a> · <a href="../backend/pom.xml">后端 pom.xml</a> · <a href="../e2e/package.json">UI 测试配置</a> · <a href="技术设计.md">服务器部署记录</a>。nginx 的 stable-alpine 为可变镜像标签，本页不把它当作固定版本号。</p>
+  </section>
+
+  <!-- ========== 1. 系统架构 ========== -->
+  <section id="app">
+    <h2>系统架构：一次请求经过哪些层</h2>
+    <p class="sub">通过 nginx 访问时，页面和 API 同源；Vite 开发模式通过代理保持同源。后端不保存登录 Session，验证 JWT 后仍查询用户状态和角色。报名一致性依赖 MySQL 事务、课程行锁与唯一索引，可支持多个后端副本。</p>
+    <div class="legend">
+      <span><i class="sw" style="background:var(--front-bg);border-color:var(--front)"></i>前端</span>
+      <span><i class="sw" style="background:var(--back-bg);border-color:var(--back)"></i>后端</span>
+      <span><i class="sw" style="background:var(--db-bg);border-color:var(--db)"></i>数据库</span>
+    </div>
+    <p class="scroll-hint">窄屏可在图内横向滚动；键盘用户可聚焦图框后用方向键查看。</p>
+    <div class="figure" tabindex="0" role="region" aria-label="可横向滚动的系统架构图">
+      <svg viewBox="0 0 1100 760" role="img" aria-label="系统分层架构图：浏览器 Vue 应用、nginx、Spring Boot、MySQL">
+        <defs>
+          <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker>
+          <marker id="ah-ops" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah-ops" d="M0,0 L10,5 L0,10 z"/></marker>
+        </defs>
+
+        <!-- 浏览器 -->
+        <rect class="band-front" x="20" y="20" width="1060" height="176" rx="10"/>
+        <text class="t-title" x="40" y="48">浏览器 · Vue 3 应用（编译后的 JavaScript）</text>
+        <text class="t-s" x="40" y="68">Element Plus（按需引入）· Vue Router · Pinia · Axios · dayjs</text>
+
+        <text class="t-h" x="40" y="98">页面</text>
+        <g class="t-b">
+          <rect class="chip" x="40"  y="108" width="96"  height="28" rx="5"/><text x="52"  y="127">登录 / 注册</text>
+          <rect class="chip" x="144" y="108" width="82"  height="28" rx="5"/><text x="156" y="127">课程列表</text>
+          <rect class="chip" x="234" y="108" width="82"  height="28" rx="5"/><text x="246" y="127">课程详情</text>
+          <rect class="chip" x="324" y="108" width="82"  height="28" rx="5"/><text x="336" y="127">我的报名</text>
+          <rect class="chip" x="414" y="108" width="82"  height="28" rx="5"/><text x="426" y="127">修改密码</text>
+          <rect class="chip" x="40"  y="144" width="122" height="28" rx="5"/><text x="52"  y="163">课程表单 · 管理员</text>
+          <rect class="chip" x="170" y="144" width="96"  height="28" rx="5"/><text x="182" y="163">统计 · 管理员</text>
+          <rect class="chip" x="274" y="144" width="124" height="28" rx="5"/><text x="286" y="163">用户管理 · 管理员</text>
+        </g>
+
+        <rect class="box-front" x="560" y="86" width="160" height="90" rx="7"/>
+        <text class="t-h" x="574" y="110">路由守卫</text>
+        <text class="t-s" x="574" y="132">meta.requiresAuth</text>
+        <text class="t-s" x="574" y="150">meta.requiresAdmin</text>
+        <text class="t-s" x="574" y="168">导航菜单按角色显示</text>
+
+        <rect class="box-front" x="732" y="86" width="150" height="90" rx="7"/>
+        <text class="t-h" x="746" y="110">Pinia auth store</text>
+        <text class="t-s" x="746" y="132">token + 当前用户</text>
+        <text class="t-s" x="746" y="150">同步到 localStorage</text>
+        <text class="t-s" x="746" y="168">有 token 时校验 /me</text>
+
+        <rect class="box-front" x="894" y="86" width="170" height="90" rx="7"/>
+        <text class="t-h" x="908" y="110">api/*.ts → http.ts</text>
+        <text class="t-s" x="908" y="132">自动带 Bearer token</text>
+        <text class="t-s" x="908" y="150">认证失效 → 登录页</text>
+        <text class="t-s" x="908" y="168">其他错误统一弹出提示</text>
+
+        <!-- 箭头 1 -->
+        <path class="arrow" d="M550 196 V 232"/>
+        <text class="t-lbl t-mono" x="566" y="219">HTTP · JSON · Authorization: Bearer &lt;JWT&gt;</text>
+
+        <!-- nginx -->
+        <rect class="band-front" x="20" y="236" width="1060" height="84" rx="10"/>
+        <text class="t-title" x="40" y="264">nginx（前端容器）</text>
+        <g class="t-b">
+          <rect class="chip" x="40"  y="276" width="196" height="30" rx="5"/><text x="52"  y="296">托管静态文件 · SPA 回退</text>
+          <rect class="chip" x="246" y="276" width="236" height="30" rx="5"/><text x="258" y="296" class="t-mono" style="font-size:12px">/api/* → backend:8080</text>
+          <rect class="chip" x="492" y="276" width="292" height="30" rx="5"/><text x="504" y="296">登录 / 注册按 IP 限流（每个 Pod）</text>
+          <rect class="chip" x="794" y="276" width="270" height="30" rx="5"/><text x="806" y="296">安全响应头 · 隐藏版本号</text>
+        </g>
+
+        <!-- 箭头 2 -->
+        <path class="arrow" d="M550 320 V 356"/>
+        <text class="t-lbl" x="566" y="343">反向代理（同源）</text>
+
+        <!-- Spring Boot -->
+        <rect class="band-back" x="20" y="360" width="1060" height="270" rx="10"/>
+        <text class="t-title" x="40" y="388">Spring Boot 4.1 · Java 21（无状态，可多副本）</text>
+
+        <!-- 请求链路 -->
+        <rect class="box-back" x="40"  y="404" width="230" height="64" rx="7"/>
+        <text class="t-h" x="54" y="428">Security 过滤链</text>
+        <text class="t-s" x="54" y="450">校验 JWT（HS256），无 Session</text>
+        <rect class="box-back" x="300" y="404" width="230" height="64" rx="7"/>
+        <text class="t-h" x="314" y="428">Controller</text>
+        <text class="t-s" x="314" y="450">参数校验 · @PreAuthorize 管理员</text>
+        <rect class="box-back" x="560" y="404" width="230" height="64" rx="7"/>
+        <text class="t-h" x="574" y="428">Service</text>
+        <text class="t-s" x="574" y="450">业务规则 · 事务 · 时间取自 Clock</text>
+        <rect class="box-back" x="820" y="404" width="244" height="64" rx="7"/>
+        <text class="t-h" x="834" y="428">Mapper</text>
+        <text class="t-s" x="834" y="450">MyBatis-Plus · 连表/聚合写 XML</text>
+        <path class="arrow" d="M270 436 H 296"/>
+        <path class="arrow" d="M530 436 H 556"/>
+        <path class="arrow" d="M790 436 H 816"/>
+
+        <text class="t-h" x="40" y="500">业务模块</text>
+        <g>
+          <rect class="box" x="40"  y="510" width="190" height="50" rx="6"/>
+          <text class="t-b t-mono" x="52" y="530">auth</text><text class="t-s" x="52" y="549">登录 · 注册 · 签发 JWT</text>
+          <rect class="box" x="240" y="510" width="190" height="50" rx="6"/>
+          <text class="t-b t-mono" x="252" y="530">user</text><text class="t-s" x="252" y="549">用户管理 · 初始管理员</text>
+          <rect class="box" x="440" y="510" width="190" height="50" rx="6"/>
+          <text class="t-b t-mono" x="452" y="530">course</text><text class="t-s" x="452" y="549">课程增改查 · 阶段计算</text>
+          <rect class="box" x="640" y="510" width="230" height="50" rx="6"/>
+          <text class="t-b t-mono" x="652" y="530">enrollment</text><text class="t-s" x="652" y="549">报名 · 名额 · 完成 · 个人统计</text>
+          <rect class="box" x="880" y="510" width="184" height="50" rx="6"/>
+          <text class="t-b t-mono" x="892" y="530">stats</text><text class="t-s" x="892" y="549">全局概览 / 课程统计</text>
+        </g>
+        <g class="t-s">
+          <rect class="chip" x="40"  y="574" width="330" height="40" rx="5"/>
+          <text x="52" y="599"><tspan class="t-mono">common</tspan>：BizException · ErrorCode · 全局异常处理</text>
+          <rect class="chip" x="380" y="574" width="470" height="40" rx="5"/>
+          <text x="392" y="599"><tspan class="t-mono">config</tspan>：Clock · 密码编码（PBKDF2，兼容旧 BCrypt）· 分页 · 生产安全检查</text>
+          <rect class="chip" x="860" y="574" width="204" height="40" rx="5"/>
+          <text x="872" y="599">Flyway：启动时自动迁移</text>
+        </g>
+
+        <!-- 箭头 3 -->
+        <path class="arrow" d="M550 630 V 666"/>
+        <text class="t-lbl" x="566" y="653">JDBC</text>
+
+        <!-- MySQL -->
+        <rect class="band-db" x="20" y="670" width="1060" height="76" rx="10"/>
+        <text class="t-title" x="40" y="698">MySQL 8.4</text>
+        <g class="t-b">
+          <rect class="box-db" x="160" y="682" width="120" height="50" rx="6"/>
+          <text class="t-mono" x="172" y="703">sys_user</text><text class="t-s" x="172" y="722">账号 · 角色</text>
+          <rect class="box-db" x="290" y="682" width="180" height="50" rx="6"/>
+          <text class="t-mono" x="302" y="703">course</text><text class="t-s" x="302" y="722">容量 · 已报名人数</text>
+          <rect class="box-db" x="480" y="682" width="230" height="50" rx="6"/>
+          <text class="t-mono" x="492" y="703">enrollment</text><text class="t-s" x="492" y="722">已报名 / 已取消 / 已完成</text>
+          <rect class="box-db" x="720" y="682" width="180" height="50" rx="6"/>
+          <text class="t-mono" x="732" y="703" style="font-size:12px">flyway_schema_history</text><text class="t-s" x="732" y="722">迁移记录</text>
+        </g>
+        <text class="lock" x="914" y="703">报名 / 取消 / 改容量 / 完成</text>
+        <text class="lock" x="914" y="722">先锁课程行 FOR UPDATE</text>
+      </svg>
+    </div>
+
+    <div class="notes">
+      <div class="note">
+        <h3>权限在两处生效</h3>
+        <p>前端路由守卫只决定显示哪些页面；真正的拦截在后端：Security 过滤链校验 JWT，管理员接口再用 <code>@PreAuthorize</code> 检查角色。</p>
+      </div>
+      <div class="note">
+        <h3>名额为什么不会超卖</h3>
+        <p>同一门课的报名、取消、改容量和完成操作先锁课程行。管理员完成操作还会在锁课程后，以 <code>FOR UPDATE</code> 当前读报名记录，避免缓存或旧快照覆盖最新状态。</p>
+      </div>
+      <div class="note">
+        <h3>错误格式统一</h3>
+        <p>业务错误经全局异常处理返回 <code>{code, message, details}</code>。认证失效时前端清理登录态并跳转；登录密码错误的 <code>401 BAD_CREDENTIALS</code> 只显示提示。</p>
+      </div>
+      <div class="note">
+        <h3>限流按前端副本分别计数</h3>
+        <p>每个 nginx Pod 对登录和注册共用按 IP 计数的漏桶：速率 30 请求/分钟，<code>burst=20 nodelay</code>，超限返回 429。两个 Pod 不共享计数，不是整个集群每分钟最多 30 次。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 2. 线上架构 ========== -->
+  <section id="prod">
+    <h2>线上架构：一台服务器上的单节点 K8s</h2>
+    <p class="sub">按部署文档，集群运行在一台火山引擎服务器上。应用的 Pod、Service、Secret 和 PVC 属于 <span class="mono">tcms</span> 命名空间；Node、PV、StorageClass 是集群级资源。业务入口为 30080，SSH 22 用于管理；实际安全组放行范围须在云平台核验。</p>
+    <div class="legend">
+      <span><i class="sw" style="background:var(--front-bg);border-color:var(--front)"></i>前端</span>
+      <span><i class="sw" style="background:var(--back-bg);border-color:var(--back)"></i>后端</span>
+      <span><i class="sw" style="background:var(--db-bg);border-color:var(--db)"></i>数据与备份</span>
+      <span><i class="sw" style="background:var(--ops-bg);border-color:var(--ops)"></i>开发与发布（虚线）</span>
+    </div>
+    <div class="figure" tabindex="0" role="region" aria-label="可横向滚动的部署架构图">
+      <svg viewBox="0 0 1100 720" role="img" aria-label="线上部署图：浏览器经 30080 端口进入服务器上的 K8s，前端、后端、MySQL、备份任务；开发机通过 SSH 发布">
+        <!-- 浏览器 -->
+        <rect class="band-front" x="20" y="112" width="160" height="64" rx="8"/>
+        <text class="t-h" x="36" y="138">员工 / 管理员</text>
+        <text class="t-s" x="36" y="160">浏览器</text>
+        <path class="arrow" d="M180 144 H 294"/>
+        <text class="t-lbl t-mono" x="192" y="134">:30080</text>
+        <rect class="gate" x="246" y="150" width="8" height="8" rx="1"/>
+        <text class="t-lbl" x="190" y="192">业务 30080</text>
+        <text class="t-lbl" x="190" y="208">管理 SSH 22</text>
+
+        <!-- 服务器 -->
+        <rect class="frame" x="250" y="20" width="580" height="680" rx="12"/>
+        <text class="t-title" x="270" y="46">火山引擎云服务器 <tspan class="t-mono" style="font-size:14px">101.96.237.10</tspan></text>
+        <text class="t-s" x="270" y="66">Ubuntu 22.04 · 4 核 / 7.1 GiB · kubeadm K8s v1.36 · containerd · Calico · local-path 存储</text>
+
+        <rect class="ns" x="270" y="82" width="540" height="602" rx="10"/>
+        <text class="t-s t-mono" x="286" y="102">namespace: tcms</text>
+
+        <!-- 前端 -->
+        <rect class="box-front" x="294" y="116" width="196" height="56" rx="7"/>
+        <text class="t-h" x="308" y="139">Service frontend</text>
+        <text class="t-s" x="308" y="159">NodePort 30080 · 保留真实 IP</text>
+        <path class="arrow" d="M490 144 H 536"/>
+        <rect class="band-front" x="540" y="108" width="250" height="76" rx="8"/>
+        <text class="t-h" x="554" y="130">frontend · Deployment</text>
+        <rect class="box-front" x="554" y="140" width="106" height="32" rx="5"/><text class="t-s" x="566" y="161">nginx Pod</text>
+        <rect class="box-front" x="670" y="140" width="106" height="32" rx="5"/><text class="t-s" x="682" y="161">nginx Pod</text>
+
+        <path class="arrow" d="M665 184 V 206 H 392 V 228"/>
+        <rect class="bgcut" x="410" y="196" width="104" height="20"/>
+        <text class="t-lbl t-mono" x="414" y="211">/api/* 代理</text>
+
+        <!-- 后端 -->
+        <rect class="box-back" x="294" y="232" width="196" height="56" rx="7"/>
+        <text class="t-h" x="308" y="255">Service backend</text>
+        <text class="t-s" x="308" y="275">ClusterIP :8080</text>
+        <path class="arrow" d="M490 260 H 536"/>
+        <rect class="band-back" x="540" y="224" width="250" height="104" rx="8"/>
+        <text class="t-h" x="554" y="246">backend · Deployment</text>
+        <rect class="box-back" x="554" y="256" width="106" height="32" rx="5"/><text class="t-s" x="566" y="277">Spring Pod</text>
+        <rect class="box-back" x="670" y="256" width="106" height="32" rx="5"/><text class="t-s" x="682" y="277">Spring Pod</text>
+        <text class="t-s" x="554" y="312">滚动发布 · 启动/就绪/存活探针</text>
+
+        <path class="arrow" d="M665 328 V 350 H 392 V 372"/>
+        <rect class="bgcut" x="410" y="340" width="50" height="20"/>
+        <text class="t-lbl" x="416" y="355">JDBC</text>
+
+        <!-- MySQL -->
+        <rect class="box-db" x="294" y="376" width="196" height="56" rx="7"/>
+        <text class="t-h" x="308" y="399">Service mysql</text>
+        <text class="t-s" x="308" y="419">headless :3306 · 不对外</text>
+        <path class="arrow" d="M490 404 H 536"/>
+        <rect class="band-db" x="540" y="368" width="250" height="76" rx="8"/>
+        <text class="t-h" x="554" y="392">mysql-0 · StatefulSet</text>
+        <text class="t-s" x="554" y="414">MySQL 8.4.13 · 单副本</text>
+        <text class="t-s" x="554" y="432">buffer pool 256M</text>
+
+        <path class="arrow" d="M665 444 V 476"/>
+        <rect class="box-db" x="540" y="480" width="250" height="56" rx="7"/>
+        <text class="t-h" x="554" y="503">数据 PVC（申请 5Gi）</text>
+        <text class="t-s" x="554" y="523">local-path-retain · 本地目录卷</text>
+
+        <!-- 备份 -->
+        <rect class="box-db" x="294" y="480" width="196" height="56" rx="7"/>
+        <text class="t-h" x="308" y="503">CronJob mysql-backup</text>
+        <text class="t-s" x="308" y="523">北京时间 03:00 · mysqldump</text>
+        <path class="arrow" d="M392 480 V 436"/>
+        <path class="arrow" d="M392 536 V 576"/>
+        <rect class="box-db" x="294" y="580" width="196" height="56" rx="7"/>
+        <text class="t-h" x="308" y="603">备份 PVC（申请 5Gi）</text>
+        <text class="t-s" x="308" y="623">gzip 压缩 · 按日清理旧文件</text>
+
+        <!-- Secret / ConfigMap -->
+        <rect class="box" x="540" y="566" width="250" height="100" rx="7"/>
+        <text class="t-h" x="554" y="590">Secret tcms-secret-…</text>
+        <text class="t-s" x="554" y="610">数据库密码 · JWT 密钥 · 初始管理员</text>
+        <text class="t-s" x="554" y="628">Kustomize 生成，名称带内容哈希</text>
+        <text class="t-h" x="554" y="654" style="font-size:13px">ConfigMap · 后端配置 / my.cnf</text>
+
+        <!-- 开发机 -->
+        <rect class="band-ops" x="870" y="112" width="210" height="200" rx="10"/>
+        <text class="t-h" x="886" y="138">开发机（Windows）</text>
+        <text class="t-s" x="886" y="164">Docker Desktop 构建镜像</text>
+        <text class="t-s" x="886" y="184">linux/amd64 · 版本标签</text>
+        <text class="t-s" x="886" y="208">deploy.ps1 一条命令发布</text>
+        <text class="t-s" x="886" y="232">kustomize 渲染清单</text>
+        <text class="t-s" x="886" y="256">密钥原文件保存在本地</text>
+        <text class="t-s" x="886" y="280">图示方式 B：直接导入镜像</text>
+        <path class="arrow-ops" d="M870 212 H 834"/>
+        <text class="t-lbl" x="834" y="236" text-anchor="start" style="fill:var(--ops)">SSH</text>
+
+        <!-- GitHub -->
+        <rect class="band-ops" x="870" y="372" width="210" height="164" rx="10"/>
+        <text class="t-h" x="886" y="398">GitHub</text>
+        <text class="t-s" x="886" y="424">功能分支 → PR</text>
+        <text class="t-s" x="886" y="446">Actions CI：</text>
+        <text class="t-s" x="886" y="466">后端测试（Testcontainers）</text>
+        <text class="t-s" x="886" y="486">前端类型检查 + 构建</text>
+        <text class="t-s" x="886" y="510">检查通过后人工合并 PR</text>
+        <path class="arrow-ops" d="M975 312 V 368"/>
+        <text class="t-lbl" x="985" y="346" style="fill:var(--ops)">push / PR</text>
+        <text class="t-s" x="870" y="566">CI 只做检查，不负责发布；</text>
+        <text class="t-s" x="870" y="586">发布在开发机上手动执行。</text>
+      </svg>
+    </div>
+
+    <div class="notes">
+      <div class="note">
+        <h3>内存配置不等于实际占用</h3>
+        <p>常驻业务容器的内存 limits 合计 2.75Gi：MySQL 1Gi、后端 768Mi × 2、前端 128Mi × 2。滚动更新新增 Pod、备份任务、系统和控制平面还需额外预算，应结合监控判断余量。</p>
+      </div>
+      <div class="note">
+        <h3>滚动更新与可用性边界</h3>
+        <p>前后端配置 <code>maxUnavailable: 0</code>、<code>maxSurge: 1</code>，并在终止前等待 5 秒，为流量摘除留时间。是否无中断仍取决于资源余量、探针及版本兼容；单节点和单副本 MySQL 不具备主机故障高可用。</p>
+      </div>
+      <div class="note warn">
+        <h3>已知风险</h3>
+        <p>没有域名和 HTTPS，登录密码明文传输，目前只适合内部验收和演示。数据卷和备份卷在同一块盘上，需要定期把备份下载到本地，并开云盘快照。</p>
+      </div>
+      <div class="note">
+        <h3>存储保留与备份清理</h3>
+        <p>Retain 避免删除 PVC 时自动回收底层数据，但重新挂载仍需人工处理，也不能防止磁盘损坏。备份按 <code>find -mtime +7</code> 每日清理，不是精确的 7 天窗口；PVC 的 5Gi 是申请值，不应当作本地目录的硬配额。</p>
+      </div>
+      <div class="note warn">
+        <h3>密码格式变更需考虑版本兼容</h3>
+        <p>新版支持 PBKDF2 和旧 BCrypt，旧版无法验证新格式密码。首次升级应避免不兼容版本同时处理认证或改密；回滚也需保留新格式校验能力，滚动更新配置不会自动解决此问题。</p>
+      </div>
+      <div class="note">
+        <h3>本地密钥会以 Secret 进入集群</h3>
+        <p><code>secret.env</code> 原文件留在开发机，内容会写入 Kubernetes Secret 并注入容器。Secret 的 base64 编码不是加密；是否启用静态加密取决于集群配置，不能理解成“密码只在本机”。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 3. 发布流程 ========== -->
+  <section id="release">
+    <h2>发布流程：<span class="mono">.\deploy\deploy.ps1</span> 做了什么</h2>
+    <ol class="flow">
+      <li><div><b>准备密钥</b><span>文件不存在时生成 <code>secret.env</code>（随机密码）；应备份并复用。重新生成该文件不会自动修改已有 MySQL 数据卷中的账号密码，配置与数据库需保持一致。</span></div></li>
+      <li><div><b>构建镜像</b><span>在开发机上用 Docker 构建 linux/amd64 镜像；默认标签取 Git commit，工作区有改动时追加 <code>-dirty-时间戳</code>，也可用 <code>-Tag</code> 指定。前端执行类型检查和构建，后端打包使用 <code>-DskipTests</code>。</span></div></li>
+      <li><div><b>交付镜像：支持两种方式</b><span>未配置 Registry 时：<code>docker save</code> → <code>scp</code> → 服务器 <code>ctr -n k8s.io images import</code>，适用于当前单节点。指定 <code>-Registry</code> 时推送镜像仓库，由集群使用 <code>registry-pull</code> 拉取。docker.io 不可达不代表其他仓库不可用。</span></div></li>
+      <li><div><b>渲染并应用 YAML 清单</b><span>本地 Kustomize 合并 base 与 prod 配置，注入镜像标签并生成 Secret；上传后执行 <code>kubectl apply -f ~/tcms-release.yaml</code>，等待 MySQL、后端和前端更新就绪。YAML 描述资源，镜像 tar 用于导入 containerd；含密钥的本地及远端临时清单用完删除。</span></div></li>
+      <li><div><b>检查入口和认证链路</b><span>请求首页，再确认未登录访问 <code>/api/auth/me</code> 返回 401。这是基础冒烟检查，不等于完整业务验证；失败只给出警告，不自动回滚。</span></div></li>
+    </ol>
+    <p class="source-note"><code>-DryRun</code> 不构建、不连接服务器，但仍可能生成本地 secret.env 和发布配置；<code>-SkipBuild</code> 跳过构建及镜像交付，要求目标镜像已存在。脚本不会在每次发布前自动备份数据库。具体行为见 <a href="../deploy/deploy.ps1">deploy.ps1</a>。</p>
+  </section>
+
+  <!-- ========== 4. 对照 ========== -->
+  <section id="envs">
+    <h2>本地与线上对照</h2>
+    <div class="table-wrap" tabindex="0" role="region" aria-label="可横向滚动的环境对照表">
+      <table>
+        <thead><tr><th></th><th>本地（docker compose）</th><th>线上（K8s）</th></tr></thead>
+        <tbody>
+          <tr><td>启动方式</td><td><code>docker compose -f deploy/docker-compose.yml up -d --build</code></td><td><code>.\deploy\deploy.ps1</code></td></tr>
+          <tr><td>访问地址</td><td><code>http://localhost:8000</code></td><td><code>http://101.96.237.10:30080</code></td></tr>
+          <tr><td>副本数</td><td>前端、后端、MySQL 各 1 个</td><td>前端 2、后端 2、MySQL 1</td></tr>
+          <tr><td>容器运行与编排</td><td>Docker Engine + Compose（Windows 使用 Docker Desktop）</td><td>Kubernetes + containerd；节点无需 Docker Engine</td></tr>
+          <tr><td>端口发布</td><td>8000、8080、3306 绑定宿主机所有接口；外部可达性取决于防火墙等网络配置</td><td>业务入口 NodePort 30080，SSH 22 用于管理；后端与 MySQL Service 不直接对外发布</td></tr>
+          <tr><td>密码与密钥</td><td>默认使用 compose 和 <code>application.yml</code> 的开发值，可用环境变量覆盖</td><td>Secret 来自 secret.env；prod 启动检查拒绝开发默认 JWT 密钥和管理员密码，不检查数据库密码是否为开发默认值</td></tr>
+          <tr><td>数据与备份</td><td>Docker 命名卷 <code>mysql-data</code></td><td>数据、备份 PVC 各申请 5Gi，Retain；每天北京时间 03:00 备份，按 <code>-mtime +7</code> 清理</td></tr>
+          <tr><td>用途</td><td>开发、e2e 自测</td><td>内部验收与演示</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+  <footer>
+    <p class="source-note">核对依据：<a href="技术设计.md">技术设计</a> · <a href="部署手册.md">部署手册</a> · <a href="../deploy/k8s/base/backend.yaml">后端清单</a> · <a href="../deploy/k8s/base/frontend.yaml">前端清单</a> · <a href="../deploy/k8s/base/mysql-backup.yaml">备份任务</a> · <a href="../.github/workflows/ci.yml">CI 工作流</a>。</p>
+    <p class="source-note">概念参考：<a href="https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/">Kubernetes 资源作用域</a> · <a href="https://kubernetes.io/docs/concepts/workloads/controllers/deployment/">滚动更新</a> · <a href="https://kubernetes.io/docs/concepts/configuration/secret/">Secret</a> · <a href="https://nginx.org/en/docs/http/ngx_http_limit_req_module.html">nginx 限流</a>。本页为静态说明，支持离线阅读及系统深浅色主题。</p>
+  </footer>
+</div>
+</body>
+</html>
