@@ -101,6 +101,24 @@ export async function registerEmployee(page, username, password = 'Passw0rd1') {
   return { username, password }
 }
 
+/** 通过接口登录，返回 Authorization 头的值 */
+export async function apiToken(page, { username, password }) {
+  const resp = await page.request.post(`${BASE}/api/auth/login`, { data: { username, password } })
+  if (!resp.ok()) throw new Error(`登录 ${username} 失败：HTTP ${resp.status()}`)
+  return `Bearer ${(await resp.json()).token}`
+}
+
+/** 管理员通过接口建课（页面建课已在 PR3 自测覆盖），返回课程 ID */
+export async function createCourseViaApi(page, adminToken, { title, start, end, capacity }) {
+  const iso = (d) => `${fmt(d).replace(' ', 'T')}:00`
+  const resp = await page.request.post(`${BASE}/api/courses`, {
+    headers: { Authorization: adminToken },
+    data: { title, instructor: '王老师', location: '3 楼大会议室', startTime: iso(start), endTime: iso(end), capacity },
+  })
+  if (resp.status() !== 201) throw new Error(`建课失败：HTTP ${resp.status()} ${await resp.text()}`)
+  return (await resp.json()).id
+}
+
 /** 在本地 compose 的 MySQL 中执行 SQL（用于构造"已开课"等状态） */
 export function sql(statement) {
   // 必须指定 utf8mb4：客户端默认字符集下，含中文的 WHERE 条件会匹配不到任何行
