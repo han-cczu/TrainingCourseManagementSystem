@@ -40,3 +40,9 @@ export const ENROLLMENT_STATUS_LABEL: Record<EnrollmentStatus, string> = {
   CANCELLED: '已取消',
   COMPLETED: '已完成',
 }
+
+export const ENROLLMENT_STATUS_TAG_TYPE: Record<EnrollmentStatus, 'primary' | 'info' | 'success'> = {
+  ENROLLED: 'primary',
+  CANCELLED: 'info',
+  COMPLETED: 'success',
+}

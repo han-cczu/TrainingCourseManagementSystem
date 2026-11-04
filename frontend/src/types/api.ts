@@ -101,6 +101,64 @@ export interface CourseQuery extends PageQuery {
   phase?: CoursePhase
 }
 
+// ---------- 报名 ----------
+
+/** 报名/完成操作的返回值（后端 EnrollmentVO） */
+export interface Enrollment {
+  id: number
+  courseId: number
+  userId: number
+  status: EnrollmentStatus
+  enrolledAt: string
+  cancelledAt: string | null
+  completedAt: string | null
+  completedBy: number | null
+}
+
+/** 课程报名人员列表的一行（管理员） */
+export interface CourseEnrollment {
+  id: number
+  userId: number
+  username: string
+  realName: string
+  department: string | null
+  status: EnrollmentStatus
+  enrolledAt: string
+  cancelledAt: string | null
+  completedAt: string | null
+  completedBy: number | null
+  completedByName: string | null
+  /** 本人确认完成；未完成为 null */
+  selfConfirmed: boolean | null
+}
+
+/** 我的报名列表的一行 */
+export interface MyEnrollment {
+  id: number
+  status: EnrollmentStatus
+  enrolledAt: string
+  cancelledAt: string | null
+  completedAt: string | null
+  completedBy: number | null
+  courseId: number
+  title: string
+  instructor: string
+  location: string | null
+  startTime: string
+  endTime: string
+  phase: CoursePhase
+}
+
+export interface MyStats {
+  enrolled: number
+  completed: number
+  cancelled: number
+}
+
+export interface EnrollmentQuery extends PageQuery {
+  status?: EnrollmentStatus
+}
+
 // ---------- 用户管理 ----------
 
 export interface CreateUserRequest extends RegisterRequest {

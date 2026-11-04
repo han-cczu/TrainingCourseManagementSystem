@@ -3,10 +3,19 @@ import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ArrowLeft } from '@element-plus/icons-vue'
 import CapacityBar from '@/components/CapacityBar.vue'
+import CourseEnrollmentTable from '@/components/CourseEnrollmentTable.vue'
+import EnrollAction from '@/components/EnrollAction.vue'
 import { coursesApi } from '@/api/courses'
 import { useAuthStore } from '@/stores/auth'
 import type { Course } from '@/types/api'
-import { ENROLLMENT_STATUS_LABEL, PHASE_LABEL, PHASE_TAG_TYPE, formatDateTime, formatTimeRange } from '@/utils/format'
+import {
+  ENROLLMENT_STATUS_LABEL,
+  ENROLLMENT_STATUS_TAG_TYPE,
+  PHASE_LABEL,
+  PHASE_TAG_TYPE,
+  formatDateTime,
+  formatTimeRange,
+} from '@/utils/format'
 
 const route = useRoute()
 const router = useRouter()
@@ -14,9 +23,10 @@ const auth = useAuthStore()
 
 const course = ref<Course | null>(null)
 const loading = ref(false)
+const enrollmentTable = ref<InstanceType<typeof CourseEnrollmentTable> | null>(null)
 
 async function load() {
-  loading.value = true
+  loading.value = course.value === null
   try {
     course.value = await coursesApi.get(Number(route.params.id))
   } catch {
@@ -24,6 +34,12 @@ async function load() {
   } finally {
     loading.value = false
   }
+}
+
+/** 自己报名/取消后：刷新课程信息，管理员还要刷新报名人员表 */
+async function onEnrollChanged() {
+  await load()
+  await enrollmentTable.value?.reload()
 }
 
 onMounted(load)
@@ -47,6 +63,7 @@ onMounted(load)
           >
             编辑课程
           </el-button>
+          <EnrollAction :course="course" @changed="onEnrollChanged" />
         </div>
 
         <el-descriptions :column="2" border class="desc">
@@ -59,7 +76,15 @@ onMounted(load)
             <CapacityBar :course="course" class="capacity" />
           </el-descriptions-item>
           <el-descriptions-item label="我的状态">
-            {{ course.myStatus ? ENROLLMENT_STATUS_LABEL[course.myStatus] : '未报名' }}
+            <el-tag
+              v-if="course.myStatus"
+              :type="ENROLLMENT_STATUS_TAG_TYPE[course.myStatus]"
+              size="small"
+              disable-transitions
+            >
+              {{ ENROLLMENT_STATUS_LABEL[course.myStatus] }}
+            </el-tag>
+            <span v-else>未报名</span>
           </el-descriptions-item>
           <el-descriptions-item label="最后更新">{{ formatDateTime(course.updatedAt) }}</el-descriptions-item>
           <el-descriptions-item label="课程介绍" :span="2">
@@ -67,6 +92,10 @@ onMounted(load)
           </el-descriptions-item>
         </el-descriptions>
       </template>
+    </el-card>
+
+    <el-card v-if="course && auth.isAdmin" class="enrollments">
+      <CourseEnrollmentTable ref="enrollmentTable" :course="course" @changed="load" />
     </el-card>
   </div>
 </template>
@@ -95,6 +124,10 @@ onMounted(load)
 
 .capacity {
   max-width: 360px;
+}
+
+.enrollments {
+  margin-top: 16px;
 }
 
 .description {
