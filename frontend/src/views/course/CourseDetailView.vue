@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ArrowLeft } from '@element-plus/icons-vue'
+import { ArrowLeft, Calendar, EditPen, Location, User } from '@element-plus/icons-vue'
 import CapacityBar from '@/components/CapacityBar.vue'
 import CourseEnrollmentTable from '@/components/CourseEnrollmentTable.vue'
 import EnrollAction from '@/components/EnrollAction.vue'
+import PageHeading from '@/components/PageHeading.vue'
 import { coursesApi } from '@/api/courses'
 import { useAuthStore } from '@/stores/auth'
 import type { Course } from '@/types/api'
@@ -22,7 +23,7 @@ const router = useRouter()
 const auth = useAuthStore()
 
 const course = ref<Course | null>(null)
-const loading = ref(false)
+const loading = ref(true)
 const enrollmentTable = ref<InstanceType<typeof CourseEnrollmentTable> | null>(null)
 
 async function load() {
@@ -49,81 +50,151 @@ onMounted(load)
   <div class="page-card">
     <el-button link :icon="ArrowLeft" class="back" @click="$router.push({ name: 'courses' })">返回课程列表</el-button>
 
-    <el-card v-loading="loading">
-      <template v-if="course">
-        <div class="head">
-          <h2 class="title">{{ course.title }}</h2>
+    <el-card v-if="loading" class="ui-panel" shadow="never" aria-busy="true">
+      <el-skeleton :rows="5" animated />
+    </el-card>
+
+    <template v-if="course">
+      <PageHeading :title="course.title">
+        <template #actions>
           <el-tag :type="PHASE_TAG_TYPE[course.phase]" disable-transitions>{{ PHASE_LABEL[course.phase] }}</el-tag>
-          <div class="spacer" />
           <el-button
             v-if="auth.isAdmin"
-            type="primary"
-            plain
+            :icon="EditPen"
             @click="$router.push({ name: 'course-edit', params: { id: course.id } })"
           >
             编辑课程
           </el-button>
-          <EnrollAction :course="course" @changed="onEnrollChanged" />
-        </div>
+        </template>
+      </PageHeading>
 
-        <el-descriptions :column="2" border class="desc">
-          <el-descriptions-item label="时间" :span="2">
-            {{ formatTimeRange(course.startTime, course.endTime) }}
-          </el-descriptions-item>
-          <el-descriptions-item label="讲师">{{ course.instructor }}</el-descriptions-item>
-          <el-descriptions-item label="地点">{{ course.location || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="名额" :span="2">
-            <CapacityBar :course="course" class="capacity" />
-          </el-descriptions-item>
-          <el-descriptions-item label="我的状态">
-            <el-tag
-              v-if="course.myStatus"
-              :type="ENROLLMENT_STATUS_TAG_TYPE[course.myStatus]"
-              size="small"
-              disable-transitions
-            >
+      <div class="detail-grid">
+        <el-card class="ui-panel registration" shadow="never">
+          <template #header><h2 class="panel-title">报名信息</h2></template>
+          <div class="registration-capacity">
+            <span class="label">报名名额</span>
+            <CapacityBar :course="course" />
+          </div>
+          <div class="enrollment-status">
+            <span class="label">我的状态</span>
+            <el-tag v-if="course.myStatus" :type="ENROLLMENT_STATUS_TAG_TYPE[course.myStatus]" size="small" disable-transitions>
               {{ ENROLLMENT_STATUS_LABEL[course.myStatus] }}
             </el-tag>
             <span v-else>未报名</span>
-          </el-descriptions-item>
-          <el-descriptions-item label="最后更新">{{ formatDateTime(course.updatedAt) }}</el-descriptions-item>
-          <el-descriptions-item label="课程介绍" :span="2">
-            <div class="description">{{ course.description || '暂无介绍' }}</div>
-          </el-descriptions-item>
-        </el-descriptions>
-      </template>
-    </el-card>
+          </div>
+          <div class="enrollment-action">
+            <EnrollAction :course="course" @changed="onEnrollChanged" />
+          </div>
+        </el-card>
 
-    <el-card v-if="course && auth.isAdmin" class="enrollments">
-      <CourseEnrollmentTable ref="enrollmentTable" :course="course" @changed="load" />
-    </el-card>
+        <el-card class="ui-panel overview" shadow="never">
+          <template #header><h2 class="panel-title">课程信息</h2></template>
+          <dl class="facts">
+            <div class="time">
+              <dt><el-icon aria-hidden="true"><Calendar /></el-icon> 上课时间</dt>
+              <dd>{{ formatTimeRange(course.startTime, course.endTime) }}</dd>
+            </div>
+            <div>
+              <dt><el-icon aria-hidden="true"><User /></el-icon> 讲师</dt>
+              <dd>{{ course.instructor }}</dd>
+            </div>
+            <div>
+              <dt><el-icon aria-hidden="true"><Location /></el-icon> 地点</dt>
+              <dd>{{ course.location || '地点待定' }}</dd>
+            </div>
+          </dl>
+          <h3 class="panel-title">课程介绍</h3>
+          <p class="description">{{ course.description || '暂无介绍' }}</p>
+          <p class="updated">最后更新 {{ formatDateTime(course.updatedAt) }}</p>
+        </el-card>
+      </div>
+
+      <el-card v-if="auth.isAdmin" class="ui-panel enrollments" shadow="never">
+        <CourseEnrollmentTable ref="enrollmentTable" :course="course" @changed="load" />
+      </el-card>
+    </template>
   </div>
 </template>
 
 <style scoped>
 .back {
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
-.head {
+.detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(245px, 1fr);
+  grid-template-areas: 'overview registration';
+  gap: 16px;
+  align-items: start;
+}
+
+.overview {
+  grid-area: overview;
+}
+
+.registration {
+  grid-area: registration;
+}
+
+.registration-capacity {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.label,
+.updated,
+.facts dt {
+  color: var(--ui-muted);
+  font-size: 13px;
+}
+
+.enrollment-status {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.enrollment-action:not(:empty) {
+  padding-top: 14px;
+  margin-top: 14px;
+  border-top: 1px solid var(--ui-border);
+}
+
+.enrollment-action :deep(.el-button) {
+  width: 100%;
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
-  margin-bottom: 20px;
+  margin: 0 0 22px;
 }
 
-.title {
-  margin: 0;
-  font-size: 20px;
+.facts > div {
+  padding: 10px 14px;
+  border-radius: 9px;
+  background: var(--el-fill-color-lighter);
 }
 
-.spacer {
-  flex: 1;
+.facts .time {
+  grid-column: 1 / -1;
 }
 
-.capacity {
-  max-width: 360px;
+.facts dt {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.facts dd {
+  margin: 4px 0 0;
+  font-size: 14px;
+  overflow-wrap: anywhere;
 }
 
 .enrollments {
@@ -131,13 +202,21 @@ onMounted(load)
 }
 
 .description {
+  margin: 8px 0 16px;
+  color: var(--el-text-color-regular);
   white-space: pre-wrap;
-  line-height: 1.6;
+  line-height: 1.75;
+  overflow-wrap: anywhere;
 }
 
-@media (max-width: 640px) {
-  .desc :deep(.el-descriptions__table) {
-    table-layout: fixed;
+.updated {
+  margin: 0;
+}
+
+@media (max-width: 720px) {
+  .detail-grid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: 'registration' 'overview';
   }
 }
 </style>

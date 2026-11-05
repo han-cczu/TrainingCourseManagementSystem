@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
+import { Plus, Search } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
+import PageHeading from '@/components/PageHeading.vue'
 import { usersApi } from '@/api/users'
 import { useAuthStore } from '@/stores/auth'
 import type { Role, UserInfo } from '@/types/api'
@@ -137,118 +139,116 @@ async function submitReset() {
 </script>
 
 <template>
-  <el-card class="page-card">
-    <template #header>
-      <div class="header">
-        <span>用户管理</span>
-        <el-button type="primary" @click="openCreate">新建用户</el-button>
-      </div>
-    </template>
+  <div class="page-card">
+    <PageHeading title="用户管理" description="管理员工账号、账号状态和密码。">
+      <template #actions>
+        <el-button type="primary" :icon="Plus" @click="openCreate">新建用户</el-button>
+      </template>
+    </PageHeading>
 
-    <div class="toolbar">
-      <el-input
-        v-model.trim="query.keyword"
-        placeholder="搜索用户名或姓名"
-        clearable
-        class="search"
-        @keyup.enter="search"
-        @clear="search"
+    <el-card class="ui-panel" shadow="never">
+      <form class="toolbar" role="search" @submit.prevent="search">
+        <el-input
+          v-model.trim="query.keyword"
+          placeholder="搜索用户名或姓名"
+          aria-label="搜索用户名或姓名"
+          :prefix-icon="Search"
+          clearable
+          class="search"
+          @clear="search"
+        />
+        <el-button native-type="submit">搜索</el-button>
+      </form>
+
+      <el-table v-loading="loading" :data="records" row-key="id" empty-text="暂无用户" class="ui-table">
+        <el-table-column prop="username" label="用户名" min-width="120" />
+        <el-table-column prop="realName" label="姓名" min-width="100" />
+        <el-table-column label="部门" min-width="100">
+          <template #default="{ row }">{{ row.department || '-' }}</template>
+        </el-table-column>
+        <el-table-column label="角色" width="90">
+          <template #default="{ row }">
+            <el-tag :type="row.role === 'ADMIN' ? 'warning' : 'info'" size="small" disable-transitions>{{ ROLE_LABEL[row.role as Role] }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="状态" width="90">
+          <template #default="{ row }">
+            <el-switch
+              v-model="row.enabled"
+              :disabled="row.id === auth.user?.id"
+              :before-change="() => beforeToggle(row as UserInfo)"
+            />
+          </template>
+        </el-table-column>
+        <el-table-column label="创建时间" width="150">
+          <template #default="{ row }">{{ formatDateTime(row.createdAt) }}</template>
+        </el-table-column>
+        <el-table-column label="操作" width="100" fixed="right">
+          <template #default="{ row }">
+            <el-button link type="primary" @click="openReset(row as UserInfo)">重置密码</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <el-pagination
+        v-model:current-page="query.page"
+        v-model:page-size="query.size"
+        :total="total"
+        :page-sizes="[10, 20, 50]"
+        :pager-count="5"
+        background
+        layout="total, sizes, prev, pager, next"
+        class="ui-pagination"
+        @current-change="load"
+        @size-change="search"
       />
-      <el-button @click="search">搜索</el-button>
-    </div>
+    </el-card>
 
-    <el-table v-loading="loading" :data="records" row-key="id" empty-text="暂无用户">
-      <el-table-column prop="username" label="用户名" min-width="120" />
-      <el-table-column prop="realName" label="姓名" min-width="100" />
-      <el-table-column label="部门" min-width="100">
-        <template #default="{ row }">{{ row.department || '-' }}</template>
-      </el-table-column>
-      <el-table-column label="角色" width="90">
-        <template #default="{ row }">
-          <el-tag :type="row.role === 'ADMIN' ? 'warning' : 'info'" size="small" disable-transitions>{{ ROLE_LABEL[row.role as Role] }}</el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column label="状态" width="90">
-        <template #default="{ row }">
-          <el-switch
-            v-model="row.enabled"
-            :disabled="row.id === auth.user?.id"
-            :before-change="() => beforeToggle(row as UserInfo)"
-          />
-        </template>
-      </el-table-column>
-      <el-table-column label="创建时间" width="150">
-        <template #default="{ row }">{{ formatDateTime(row.createdAt) }}</template>
-      </el-table-column>
-      <el-table-column label="操作" width="100" fixed="right">
-        <template #default="{ row }">
-          <el-button link type="primary" @click="openReset(row as UserInfo)">重置密码</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
+    <el-dialog v-model="createVisible" title="新建用户" width="min(480px, 92vw)">
+      <el-form ref="createFormRef" :model="createForm" :rules="createRules" label-position="top">
+        <el-form-item label="用户名" prop="username">
+          <el-input v-model.trim="createForm.username" placeholder="3-32 位字母、数字或下划线" />
+        </el-form-item>
+        <el-form-item label="姓名" prop="realName">
+          <el-input v-model.trim="createForm.realName" />
+        </el-form-item>
+        <el-form-item label="部门" prop="department">
+          <el-input v-model.trim="createForm.department" placeholder="选填" />
+        </el-form-item>
+        <el-form-item label="角色" prop="role">
+          <el-radio-group v-model="createForm.role">
+            <el-radio value="EMPLOYEE">员工</el-radio>
+            <el-radio value="ADMIN">管理员</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="初始密码" prop="password">
+          <el-input v-model="createForm.password" type="password" placeholder="8-64 位，包含字母和数字" show-password />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="createVisible = false">取消</el-button>
+        <el-button type="primary" :loading="createLoading" @click="submitCreate">创建</el-button>
+      </template>
+    </el-dialog>
 
-    <el-pagination
-      v-model:current-page="query.page"
-      v-model:page-size="query.size"
-      :total="total"
-      :page-sizes="[10, 20, 50]"
-      layout="total, sizes, prev, pager, next"
-      class="pagination"
-      @current-change="load"
-      @size-change="search"
-    />
-  </el-card>
-
-  <el-dialog v-model="createVisible" title="新建用户" width="min(480px, 92vw)">
-    <el-form ref="createFormRef" :model="createForm" :rules="createRules" label-width="70px">
-      <el-form-item label="用户名" prop="username">
-        <el-input v-model.trim="createForm.username" placeholder="3-32 位字母、数字或下划线" />
-      </el-form-item>
-      <el-form-item label="姓名" prop="realName">
-        <el-input v-model.trim="createForm.realName" />
-      </el-form-item>
-      <el-form-item label="部门" prop="department">
-        <el-input v-model.trim="createForm.department" placeholder="选填" />
-      </el-form-item>
-      <el-form-item label="角色" prop="role">
-        <el-radio-group v-model="createForm.role">
-          <el-radio value="EMPLOYEE">员工</el-radio>
-          <el-radio value="ADMIN">管理员</el-radio>
-        </el-radio-group>
-      </el-form-item>
-      <el-form-item label="初始密码" prop="password">
-        <el-input v-model="createForm.password" type="password" placeholder="8-64 位，包含字母和数字" show-password />
-      </el-form-item>
-    </el-form>
-    <template #footer>
-      <el-button @click="createVisible = false">取消</el-button>
-      <el-button type="primary" :loading="createLoading" @click="submitCreate">创建</el-button>
-    </template>
-  </el-dialog>
-
-  <el-dialog v-model="resetVisible" :title="`重置密码：${resetTarget?.realName ?? ''}`" width="min(440px, 92vw)">
-    <el-form ref="resetFormRef" :model="resetForm" :rules="resetRules" label-width="90px">
-      <el-form-item label="新密码" prop="newPassword">
-        <el-input v-model="resetForm.newPassword" type="password" placeholder="8-64 位，包含字母和数字" show-password />
-      </el-form-item>
-      <el-form-item label="确认新密码" prop="confirmPassword">
-        <el-input v-model="resetForm.confirmPassword" type="password" show-password />
-      </el-form-item>
-    </el-form>
-    <template #footer>
-      <el-button @click="resetVisible = false">取消</el-button>
-      <el-button type="primary" :loading="resetLoading" @click="submitReset">重置</el-button>
-    </template>
-  </el-dialog>
+    <el-dialog v-model="resetVisible" :title="`重置密码：${resetTarget?.realName ?? ''}`" width="min(440px, 92vw)">
+      <el-form ref="resetFormRef" :model="resetForm" :rules="resetRules" label-position="top">
+        <el-form-item label="新密码" prop="newPassword">
+          <el-input v-model="resetForm.newPassword" type="password" placeholder="8-64 位，包含字母和数字" show-password />
+        </el-form-item>
+        <el-form-item label="确认新密码" prop="confirmPassword">
+          <el-input v-model="resetForm.confirmPassword" type="password" show-password />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="resetVisible = false">取消</el-button>
+        <el-button type="primary" :loading="resetLoading" @click="submitReset">重置</el-button>
+      </template>
+    </el-dialog>
+  </div>
 </template>
 
 <style scoped>
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
 .toolbar {
   display: flex;
   gap: 8px;
@@ -257,10 +257,5 @@ async function submitReset() {
 
 .search {
   max-width: 280px;
-}
-
-.pagination {
-  margin-top: 16px;
-  justify-content: flex-end;
 }
 </style>

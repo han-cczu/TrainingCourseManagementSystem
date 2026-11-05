@@ -68,8 +68,8 @@ defineExpose({ reload: load })
 <template>
   <div class="enrollments">
     <div class="toolbar">
-      <span class="heading">报名人员</span>
-      <el-radio-group v-model="query.status" size="small" @change="filter">
+      <h2 class="panel-title">报名人员</h2>
+      <el-radio-group v-model="query.status" size="small" aria-label="报名状态" @change="filter">
         <el-radio-button value="">全部</el-radio-button>
         <el-radio-button value="ENROLLED">已报名</el-radio-button>
         <el-radio-button value="COMPLETED">已完成</el-radio-button>
@@ -77,7 +77,7 @@ defineExpose({ reload: load })
       </el-radio-group>
     </div>
 
-    <el-table v-loading="loading" :data="records" row-key="id" empty-text="暂无报名">
+    <el-table v-loading="loading" :data="records" row-key="id" empty-text="暂无报名" class="ui-table">
       <el-table-column prop="realName" label="姓名" min-width="100" />
       <el-table-column prop="username" label="用户名" min-width="110" />
       <el-table-column label="部门" min-width="90">
@@ -118,8 +118,10 @@ defineExpose({ reload: load })
       v-model:current-page="query.page"
       :page-size="query.size"
       :total="total"
+      :pager-count="5"
+      background
       layout="total, prev, pager, next"
-      class="pagination"
+      class="ui-pagination"
       @current-change="load"
     />
   </div>
@@ -133,15 +135,5 @@ defineExpose({ reload: load })
   justify-content: space-between;
   gap: 12px;
   margin-bottom: 12px;
-}
-
-.heading {
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.pagination {
-  margin-top: 12px;
-  justify-content: flex-end;
 }
 </style>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
+import PageHeading from '@/components/PageHeading.vue'
 import { authApi } from '@/api/auth'
 import { confirmPasswordRules, passwordRules } from '@/utils/validation'
 
@@ -30,29 +31,31 @@ async function submit() {
 </script>
 
 <template>
-  <el-card class="page-card narrow">
-    <template #header>修改密码</template>
-    <el-form ref="formRef" :model="form" :rules="rules" label-width="90px" @submit.prevent="submit">
-      <el-form-item label="原密码" prop="oldPassword">
-        <el-input v-model="form.oldPassword" type="password" autocomplete="current-password" show-password />
-      </el-form-item>
-      <el-form-item label="新密码" prop="newPassword">
-        <el-input
-          v-model="form.newPassword"
-          type="password"
-          placeholder="8-64 位，包含字母和数字"
-          autocomplete="new-password"
-          show-password
-        />
-      </el-form-item>
-      <el-form-item label="确认新密码" prop="confirmPassword">
-        <el-input v-model="form.confirmPassword" type="password" autocomplete="new-password" show-password />
-      </el-form-item>
-      <el-form-item>
-        <el-button type="primary" native-type="submit" :loading="loading">保存</el-button>
-      </el-form-item>
-    </el-form>
-  </el-card>
+  <div class="page-card narrow">
+    <PageHeading title="修改密码" description="验证当前密码后，设置用于下次登录的新密码。" />
+    <el-card class="ui-panel" shadow="never">
+      <el-form ref="formRef" :model="form" :rules="rules" label-position="top" @submit.prevent="submit">
+        <el-form-item label="原密码" prop="oldPassword">
+          <el-input v-model="form.oldPassword" type="password" autocomplete="current-password" show-password />
+        </el-form-item>
+        <el-form-item label="新密码" prop="newPassword">
+          <el-input
+            v-model="form.newPassword"
+            type="password"
+            placeholder="8-64 位，包含字母和数字"
+            autocomplete="new-password"
+            show-password
+          />
+        </el-form-item>
+        <el-form-item label="确认新密码" prop="confirmPassword">
+          <el-input v-model="form.confirmPassword" type="password" autocomplete="new-password" show-password />
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" native-type="submit" :loading="loading">保存</el-button>
+        </el-form-item>
+      </el-form>
+    </el-card>
+  </div>
 </template>
 
 <style scoped>

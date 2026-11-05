@@ -48,7 +48,7 @@ async function submit() {
 </script>
 
 <template>
-  <AuthCard title="注册账号">
+  <AuthCard title="注册账号" description="创建员工账号后即可浏览和报名课程。">
     <el-form
       ref="formRef"
       :model="form"

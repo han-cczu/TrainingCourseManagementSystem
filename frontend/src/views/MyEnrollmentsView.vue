@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
+import { CircleCheck, CircleClose, Tickets } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import PageHeading from '@/components/PageHeading.vue'
 import { enrollmentsApi } from '@/api/enrollments'
 import type { EnrollmentStatus, MyEnrollment, MyStats } from '@/types/api'
 import {
@@ -91,19 +93,23 @@ onMounted(() => Promise.all([load(), loadStats()]))
 
 <template>
   <div class="page-card">
+    <PageHeading title="我的报名" description="查看课程报名记录和学习进度。" />
     <div class="stats">
-      <el-card shadow="never" class="stat">
+      <el-card shadow="never" class="ui-panel stat">
+        <span class="metric-icon" aria-hidden="true"><Tickets /></span>
         <el-statistic title="已报名" :value="stats.enrolled" />
       </el-card>
-      <el-card shadow="never" class="stat">
+      <el-card shadow="never" class="ui-panel stat">
+        <span class="metric-icon is-success" aria-hidden="true"><CircleCheck /></span>
         <el-statistic title="已完成" :value="stats.completed" />
       </el-card>
-      <el-card shadow="never" class="stat">
+      <el-card shadow="never" class="ui-panel stat">
+        <span class="metric-icon is-neutral" aria-hidden="true"><CircleClose /></span>
         <el-statistic title="已取消" :value="stats.cancelled" />
       </el-card>
     </div>
 
-    <el-card>
+    <el-card class="ui-panel" shadow="never">
       <el-tabs v-model="query.status" @tab-change="changeTab">
         <el-tab-pane label="全部" name="ALL" />
         <el-tab-pane label="已报名" name="ENROLLED" />
@@ -111,7 +117,7 @@ onMounted(() => Promise.all([load(), loadStats()]))
         <el-tab-pane label="已取消" name="CANCELLED" />
       </el-tabs>
 
-      <el-table v-loading="loading" :data="records" row-key="id">
+      <el-table v-loading="loading" :data="records" row-key="id" class="ui-table">
         <template #empty>
           <el-empty description="还没有报名记录">
             <el-button type="primary" @click="$router.push({ name: 'courses' })">去看看课程</el-button>
@@ -174,8 +180,10 @@ onMounted(() => Promise.all([load(), loadStats()]))
         v-model:current-page="query.page"
         :page-size="query.size"
         :total="total"
+        :pager-count="5"
+        background
         layout="total, prev, pager, next"
-        class="pagination"
+        class="ui-pagination"
         @current-change="load"
       />
     </el-card>
@@ -185,13 +193,15 @@ onMounted(() => Promise.all([load(), loadStats()]))
 <style scoped>
 .stats {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
   margin-bottom: 16px;
 }
 
-.stat {
-  text-align: center;
+.stat :deep(.el-statistic__number) {
+  font-size: 26px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
 }
 
 .course-link {
@@ -209,14 +219,13 @@ onMounted(() => Promise.all([load(), loadStats()]))
   font-size: 12px;
 }
 
-.pagination {
-  margin-top: 12px;
-  justify-content: flex-end;
-}
-
 @media (max-width: 640px) {
   .stats {
     gap: 8px;
+  }
+
+  .stat {
+    --el-card-padding: 10px;
   }
 }
 </style>

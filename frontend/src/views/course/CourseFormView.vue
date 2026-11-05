@@ -3,6 +3,7 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import dayjs from 'dayjs'
 import { ElMessage, type FormInstance, type FormItemRule, type FormRules } from 'element-plus'
+import PageHeading from '@/components/PageHeading.vue'
 import { coursesApi } from '@/api/courses'
 import type { Course, CourseRequest } from '@/types/api'
 import { API_DATETIME_FORMAT } from '@/utils/format'
@@ -132,94 +133,127 @@ async function submit() {
 </script>
 
 <template>
-  <el-card v-loading="loading" class="page-card narrow">
-    <template #header>{{ isEdit ? '编辑课程' : '新建课程' }}</template>
-
-    <el-alert
-      v-if="started"
-      type="warning"
-      :closable="false"
-      show-icon
-      title="课程已开始，开始/结束时间和容量不能再修改"
-      class="alert"
+  <div class="page-card narrow">
+    <PageHeading
+      :title="isEdit ? '编辑课程' : '新建课程'"
+      description="填写课程信息、上课时间和报名名额。"
     />
+    <el-card v-loading="loading" class="ui-panel" shadow="never">
+      <el-alert
+        v-if="started"
+        type="warning"
+        :closable="false"
+        show-icon
+        title="课程已开始，开始/结束时间和容量不能再修改"
+        class="alert"
+      />
 
-    <el-form ref="formRef" :model="form" :rules="rules" label-width="90px" @submit.prevent="submit">
-      <el-form-item label="课程名称" prop="title">
-        <el-input v-model="form.title" maxlength="100" show-word-limit />
-      </el-form-item>
-      <el-form-item label="讲师" prop="instructor">
-        <el-input v-model="form.instructor" maxlength="32" />
-      </el-form-item>
-      <el-form-item label="地点" prop="location">
-        <el-input v-model="form.location" placeholder="会议室或线上会议链接，选填" maxlength="100" />
-      </el-form-item>
-      <el-form-item label="开始时间" prop="startTime">
-        <el-date-picker
-          v-model="form.startTime"
-          type="datetime"
-          placeholder="选择开始时间"
-          format="YYYY-MM-DD HH:mm"
-          :value-format="API_DATETIME_FORMAT"
-          :disabled="started"
-          :disabled-date="disablePastDate"
-          class="picker"
-        />
-      </el-form-item>
-      <el-form-item label="结束时间" prop="endTime">
-        <el-date-picker
-          v-model="form.endTime"
-          type="datetime"
-          placeholder="选择结束时间"
-          format="YYYY-MM-DD HH:mm"
-          :value-format="API_DATETIME_FORMAT"
-          :disabled="started"
-          :disabled-date="disablePastDate"
-          class="picker"
-        />
-      </el-form-item>
-      <el-form-item label="名额" prop="capacity">
-        <div class="capacity">
-          <el-switch
-            v-model="form.unlimited"
-            active-text="不限人数"
+      <el-form ref="formRef" :model="form" :rules="rules" label-position="top" class="course-form" @submit.prevent="submit">
+        <h2 class="panel-title form-wide">基本信息</h2>
+        <el-form-item label="课程名称" prop="title" class="form-wide">
+          <el-input v-model="form.title" maxlength="100" show-word-limit />
+        </el-form-item>
+        <el-form-item label="讲师" prop="instructor">
+          <el-input v-model="form.instructor" maxlength="32" />
+        </el-form-item>
+        <el-form-item label="地点" prop="location">
+          <el-input v-model="form.location" placeholder="会议室或线上会议链接，选填" maxlength="100" />
+        </el-form-item>
+        <el-form-item label="课程介绍" prop="description" class="form-wide">
+          <el-input v-model="form.description" type="textarea" :rows="4" maxlength="2000" show-word-limit />
+        </el-form-item>
+        <h2 class="panel-title schedule-title form-wide">时间与名额</h2>
+        <el-form-item label="开始时间" prop="startTime">
+          <el-date-picker
+            v-model="form.startTime"
+            type="datetime"
+            placeholder="选择开始时间"
+            format="YYYY-MM-DD HH:mm"
+            popper-class="course-date-popper"
+            :value-format="API_DATETIME_FORMAT"
             :disabled="started"
-            @change="formRef?.clearValidate('capacity')"
+            :disabled-date="disablePastDate"
+            class="picker"
           />
-          <el-input-number
-            v-if="!form.unlimited"
-            v-model="form.capacity"
-            :min="minCapacity"
-            :max="10000"
+        </el-form-item>
+        <el-form-item label="结束时间" prop="endTime">
+          <el-date-picker
+            v-model="form.endTime"
+            type="datetime"
+            placeholder="选择结束时间"
+            format="YYYY-MM-DD HH:mm"
+            popper-class="course-date-popper"
+            :value-format="API_DATETIME_FORMAT"
             :disabled="started"
+            :disabled-date="disablePastDate"
+            class="picker"
           />
-          <span v-if="original" class="hint">已报名 {{ original.enrolledCount }} 人</span>
+        </el-form-item>
+        <el-form-item label="名额" prop="capacity" class="form-wide">
+          <div class="capacity">
+            <el-switch
+              v-model="form.unlimited"
+              active-text="不限人数"
+              :disabled="started"
+              @change="formRef?.clearValidate('capacity')"
+            />
+            <el-input-number
+              v-if="!form.unlimited"
+              v-model="form.capacity"
+              :min="minCapacity"
+              :max="10000"
+              :disabled="started"
+            />
+            <span v-if="original" class="hint">已报名 {{ original.enrolledCount }} 人</span>
+          </div>
+        </el-form-item>
+        <div class="form-actions form-wide">
+          <el-button type="primary" native-type="submit" :loading="saving">
+            {{ isEdit ? '保存' : '创建' }}
+          </el-button>
+          <el-button @click="$router.back()">取消</el-button>
         </div>
-      </el-form-item>
-      <el-form-item label="课程介绍" prop="description">
-        <el-input v-model="form.description" type="textarea" :rows="5" maxlength="2000" show-word-limit />
-      </el-form-item>
-      <el-form-item>
-        <el-button type="primary" native-type="submit" :loading="saving">
-          {{ isEdit ? '保存' : '创建' }}
-        </el-button>
-        <el-button @click="$router.back()">取消</el-button>
-      </el-form-item>
-    </el-form>
-  </el-card>
+      </el-form>
+    </el-card>
+  </div>
 </template>
 
 <style scoped>
 .narrow {
-  max-width: 720px;
+  max-width: 780px;
 }
 
 .alert {
   margin-bottom: 16px;
 }
 
-.picker {
-  width: 240px;
+.course-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 16px;
+}
+
+.form-wide {
+  grid-column: 1 / -1;
+}
+
+.panel-title {
+  margin-bottom: 12px;
+}
+
+.schedule-title,
+.form-actions {
+  padding-top: 16px;
+  border-top: 1px solid var(--ui-border);
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.course-form :deep(.picker) {
+  width: 100%;
 }
 
 .capacity {
@@ -232,5 +266,29 @@ async function submit() {
 .hint {
   color: var(--el-text-color-secondary);
   font-size: 13px;
+}
+
+@media (max-width: 560px) {
+  .course-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 350px) {
+  :global(.course-date-popper .el-date-picker) {
+    width: calc(100vw - 16px);
+  }
+
+  :global(.course-date-popper .el-date-picker .el-picker-panel__content) {
+    width: auto;
+    margin-inline: 10px;
+  }
+}
+
+@media (max-width: 420px) {
+  :global(.course-date-popper .el-date-picker__time-header .el-time-panel) {
+    right: 5px;
+    left: auto;
+  }
 }
 </style>

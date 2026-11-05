@@ -1,19 +1,151 @@
-html,
-body,
-#app {
-  height: 100%;
-  margin: 0;
+:root {
+  --ui-canvas: #f7f7fc;
+  --ui-surface: #fff;
+  --ui-ink: #201d35;
+  --ui-muted: #635f78;
+  --ui-border: #e9e6f0;
+  --ui-accent: #5940bd;
+  --ui-accent-soft: #efebff;
+  --ui-radius: 16px;
+  --ui-shadow: 0 2px 6px rgb(38 27 74 / 3%), 0 10px 30px rgb(38 27 74 / 4%);
+  --ui-ease: 180ms ease;
+  --el-color-primary: var(--ui-accent);
+  --el-color-primary-light-3: #765cda;
+  --el-color-primary-light-5: #a08dec;
+  --el-color-primary-light-7: #ccc1f9;
+  --el-color-primary-light-8: #e3dbff;
+  --el-color-primary-light-9: var(--ui-accent-soft);
+  --el-color-primary-dark-2: #443095;
+  --el-color-success: #267556;
+  --el-color-warning: #8c5d13;
+  --el-color-danger: #b3384e;
+  --el-color-error: var(--el-color-danger);
+  --el-color-info: #605c74;
+  --el-bg-color-page: var(--ui-canvas);
+  --el-bg-color: var(--ui-surface);
+  --el-text-color-primary: var(--ui-ink);
+  --el-text-color-regular: #4b4761;
+  --el-text-color-secondary: var(--ui-muted);
+  --el-border-color: #dcd7e7;
+  --el-border-color-light: var(--ui-border);
+  --el-border-color-lighter: #efedf4;
+  --el-fill-color-light: #f6f4fa;
+  --el-fill-color-lighter: #faf9fd;
+  --el-border-radius-base: 8px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
 body {
+  min-width: 0;
+  margin: 0;
   font-family:
-    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
-    sans-serif;
-  background: var(--el-bg-color-page);
-  color: var(--el-text-color-primary);
+    'Segoe UI', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  background: var(--ui-canvas);
+  color: var(--ui-ink);
+  line-height: 1.5;
+}
+
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--ui-accent);
+  outline-offset: 3px;
 }
 
 .page-card {
-  max-width: 1200px;
-  margin: 0 auto;
+  width: 100%;
+  min-width: 0;
+  max-width: 1280px;
+  margin-inline: auto;
+}
+
+.el-card.ui-panel {
+  --el-card-border-color: var(--ui-border);
+  --el-card-border-radius: var(--ui-radius);
+  --el-card-padding: clamp(14px, 2.2vw, 24px);
+  min-width: 0;
+  box-shadow: var(--ui-shadow);
+}
+
+.panel-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 650;
+}
+
+.metric-icon {
+  display: inline-grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  margin-bottom: 8px;
+  border-radius: 10px;
+  background: var(--ui-accent-soft);
+  color: var(--ui-accent);
+  font-size: 19px;
+}
+
+.metric-icon.is-success {
+  background: #e6f6ef;
+  color: #277a59;
+}
+
+.metric-icon svg {
+  width: 1em;
+  height: 1em;
+}
+
+.metric-icon.is-neutral {
+  background: #edf0f7;
+  color: #565d78;
+}
+
+.el-table.ui-table {
+  --el-table-header-bg-color: var(--el-fill-color-lighter);
+  --el-table-header-text-color: var(--ui-muted);
+  --el-table-row-hover-bg-color: var(--el-fill-color-light);
+  border-radius: 10px;
+}
+
+.ui-table .el-table__cell {
+  padding-block: 12px;
+}
+
+.el-pagination.ui-pagination {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px;
+  margin-top: 16px;
+}
+
+.el-tag {
+  --el-tag-border-radius: 6px;
+}
+
+.page-enter-active {
+  animation: page-enter 200ms ease-out both;
+}
+
+@keyframes page-enter {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --ui-ease: 0ms;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }

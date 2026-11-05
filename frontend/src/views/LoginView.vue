@@ -44,12 +44,12 @@ async function submit() {
 </script>
 
 <template>
-  <AuthCard title="登录">
-    <el-form ref="formRef" :model="form" :rules="rules" size="large" @submit.prevent="submit">
-      <el-form-item prop="username">
+  <AuthCard title="登录" description="使用你的账号进入培训工作台。">
+    <el-form ref="formRef" :model="form" :rules="rules" size="large" label-position="top" @submit.prevent="submit">
+      <el-form-item label="用户名" prop="username">
         <el-input v-model.trim="form.username" placeholder="用户名" autocomplete="username" />
       </el-form-item>
-      <el-form-item prop="password">
+      <el-form-item label="密码" prop="password">
         <el-input
           v-model="form.password"
           type="password"

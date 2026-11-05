@@ -110,7 +110,7 @@ await step('5. 开课后：报名/取消按钮消失；A 本人标记完成，�
   await button(pageA, '标记完成').click()
   await confirmDialog(pageA, '确认完成')
   await message(pageA, '已标记为完成')
-  await pageA.locator('.el-descriptions .el-tag', { hasText: '已完成' }).waitFor()
+  await pageA.locator('.enrollment-status').getByText('已完成', { exact: true }).waitFor()
 
   await pageB.goto(`${BASE}/courses/${courseId}`)
   await pageB.getByText('报名已截止').waitFor()

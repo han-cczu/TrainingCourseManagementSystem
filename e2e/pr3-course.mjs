@@ -37,15 +37,15 @@ async function fillCourse(page, { title, start, end, capacity }) {
 
 const cards = (page) => page.locator('.course-card')
 
-/** 执行会刷新课程列表的操作，等接口返回且加载遮罩消失后再继续（否则会数到旧列表） */
+/** 等待初始列表和本次操作的结果，避免数到加载骨架或旧列表。 */
 async function reloadingList(page, action) {
+  const settled = page.locator('.grid-wrap[aria-busy="false"]')
+  await settled.waitFor()
   await Promise.all([
     page.waitForResponse((r) => new URL(r.url()).pathname === '/api/courses' && r.request().method() === 'GET'),
     action(),
   ])
-  // 遮罩淡出过程中可能同时存在两个，等到一个可见的都没有
-  await page.waitForFunction(() =>
-    [...document.querySelectorAll('.grid-wrap > .el-loading-mask')].every((el) => el.offsetParent === null))
+  await settled.waitFor()
 }
 
 async function expectCardCount(page, expected) {

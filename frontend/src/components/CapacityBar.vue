@@ -21,7 +21,7 @@ const full = computed(() => props.course.capacity !== null && props.course.enrol
         :percentage="percentage"
         :status="full ? 'exception' : undefined"
         :show-text="false"
-        :stroke-width="8"
+        :stroke-width="6"
         class="bar"
       />
       <span class="text" :class="{ full }">
@@ -40,12 +40,12 @@ const full = computed(() => props.course.capacity !== null && props.course.enrol
 
 .bar {
   flex: 1;
-  min-width: 80px;
+  min-width: 32px;
 }
 
 .text {
-  white-space: nowrap;
   font-size: 13px;
+  font-variant-numeric: tabular-nums;
   color: var(--el-text-color-regular);
 }
 
