@@ -6,18 +6,20 @@
 
 [![CI](https://github.com/han-cczu/TrainingCourseManagementSystem/actions/workflows/ci.yml/badge.svg)](https://github.com/han-cczu/TrainingCourseManagementSystem/actions/workflows/ci.yml)
 
-| 课程列表（员工视角：已报名、已满） | 管理员：报名人员与确认方式 |
+| 课程列表（员工视角：关键词筛选、名额进度、报名状态） | 管理员：报名人员与确认方式 |
 |---|---|
-| ![课程列表](docs/images/pr4/01-enrolled.png) | ![报名人员](docs/images/pr4/05-admin-enrollments.png) |
+| ![课程列表](docs/images/ui/01-course-list.png) | ![报名人员](docs/images/ui/02-admin-enrollments.png) |
 | **我的报名** | **基础统计** |
-| ![我的报名](docs/images/pr4/06-my-enrollments.png) | ![统计](docs/images/pr5/01-stats.png) |
+| ![我的报名](docs/images/ui/03-my-enrollments.png) | ![统计](docs/images/ui/04-stats.png) |
+
+截图使用演示数据（见下文「演示数据」）。
 
 ## 功能
 
 | 题目需求 | 实现 |
 |---|---|
 | 创建课程 / 编辑课程 | 管理员操作。只能创建未来开课的课程；开课后不能再改时间和容量；容量不能改到比已报名人数少 |
-| 查看课程列表 | 卡片列表，支持按课程名称或讲师搜索、按阶段（报名中 / 进行中 / 已结束）筛选、分页，并显示名额进度 |
+| 查看课程列表 | 卡片列表，支持按课程名称或讲师搜索、按阶段（报名中 / 进行中 / 已结束）筛选、分页，并显示名额进度；展示当前筛选条件，可一键清除，加载中、无结果和加载失败（可重试）分别提示 |
 | 用户报名课程 / 取消报名 | 只能在开课前操作；取消后可以重新报名（复用原来的记录） |
 | 查看课程已报名人员 | 管理员可按状态筛选，并能看到每条完成记录是「本人确认」还是「管理员确认」 |
 | 标记课程学习完成 | 开课后，员工本人或管理员都可以标记 |
@@ -30,6 +32,7 @@
 - 开课后不能报名或取消的时间规则
 - 登录限流
 - Kubernetes 生产部署清单
+- 响应式工作台界面：桌面端分组侧栏，手机端导航抽屉；窄屏下数据表在表内横向滚动；遵循系统的「减少动态效果」设置
 
 ## 技术栈
 
@@ -120,7 +123,7 @@ CLAUDE.md    AI 协作约定
 | 文档 | 内容 |
 |---|---|
 | [技术设计](docs/技术设计.md) | 需求范围、数据模型、业务规则、并发控制、API、统计口径、部署、测试策略 |
-| [实现计划](docs/实现计划/README.md) | 按 PR 拆分的任务清单、测试、自测步骤和完成标准（PR2~PR6） |
+| [实现计划](docs/实现计划/README.md) | 按 PR 拆分的任务清单、测试、自测步骤和完成标准（PR2~PR6、前端体验重构） |
 | [自测说明](docs/自测说明.md) | 测试环境、复现步骤、需求覆盖矩阵、UI 测试用例、并发测试结果、已知限制 |
 | [AI Coding 使用说明](docs/AI-Coding使用说明.md) | 工具、协作流程、人与 AI 的分工、关键决策、AI 出过的错及纠正方式 |
 | [部署手册](docs/部署手册.md) | 生产环境（火山引擎单节点 K8s）的准备、发布、回滚、备份与恢复 |
@@ -135,4 +138,4 @@ CLAUDE.md    AI 协作约定
 
 ## 开发过程
 
-项目按 6 个 PR 交付（[#1](https://github.com/han-cczu/TrainingCourseManagementSystem/pull/1) ~ [#6](https://github.com/han-cczu/TrainingCourseManagementSystem/pull/6)）。每个 PR 都包含后端和对应的前端页面，PR 描述里附有测试结果、自测截图和 AI 使用情况。开发过程中使用了 Claude Code 辅助编码，详见 [AI Coding 使用说明](docs/AI-Coding使用说明.md)。
+核心功能按 6 个 PR 交付（[#1](https://github.com/han-cczu/TrainingCourseManagementSystem/pull/1) ~ [#6](https://github.com/han-cczu/TrainingCourseManagementSystem/pull/6)），每个 PR 都包含后端和对应的前端页面，PR 描述里附有测试结果、自测截图和 AI 使用情况。之后又补充了演示数据（[#7](https://github.com/han-cczu/TrainingCourseManagementSystem/pull/7)）、本地复查缺陷修复（[#9](https://github.com/han-cczu/TrainingCourseManagementSystem/pull/9)）、架构图（[#10](https://github.com/han-cczu/TrainingCourseManagementSystem/pull/10)）和前端体验重构（[#11](https://github.com/han-cczu/TrainingCourseManagementSystem/pull/11)）。开发过程中使用了 Claude Code 辅助编码，详见 [AI Coding 使用说明](docs/AI-Coding使用说明.md)。
